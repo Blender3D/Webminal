@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}Terminal{% endblock title %}
+
+{% block body %}
+  <div id="terminal">
+    <iframe src="http://localhost:4200/" scrolling="no" frameborder="0"></iframe>
+  </div>
+  
+  <div id="side">
+    <h2>Welcome to Webminal, the GNU/Linux Online Terminal</h2>
+    
+    {{ lipsum(20) }}
+  </div>
+{% endblock body %}

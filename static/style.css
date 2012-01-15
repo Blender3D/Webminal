@@ -1,0 +1,86 @@
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: #525252;
+}
+
+h2 {
+  font-weight: bold;
+  font-size: x-large;
+  
+  margin-bottom: 0.5em;
+}
+
+#side {
+  background-color: #525252;
+  color: #EEEEEE;
+  font-size: 16px;
+  
+  padding: 20px;
+  
+  float: left;
+}
+
+#terminal {
+  position: fixed;
+  left: 0px;
+  width: 300px;
+  
+  min-width: 200px;
+  
+  margin-right: 8px;
+}
+
+#terminal iframe {
+  height: 100%;
+  width: 100%;
+}
+
+#splitter {
+  position: absolute;
+  
+  top: 0px;
+  right: -8px;
+  bottom: 0px;
+  
+  background-color: hsl(211, 49%, 43%);
+  width: 8px;
+  
+  cursor: col-resize;
+}
+
+#overlay {
+  position: fixed;
+  
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  
+  z-index: 3;
+  
+  cursor: col-resize;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+  background-color: #525252;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(211, 49%, 43%);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(211, 49%, 53%);
+}
+::-webkit-scrollbar-corner {
+  display: none;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #525252;
+}
