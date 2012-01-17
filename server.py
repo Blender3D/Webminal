@@ -60,8 +60,6 @@ class User(db.Model):
       hashlib.sha512(self.email).hexdigest()
     ).hexdigest()
     
-    print self.password
-  
   def __repr__(self):
     return '<User {username}>'.format(username=self.username)
 
@@ -91,6 +89,13 @@ def login():
       ).hexdigest()
       
       if password_hash == user.password:
+        if not user.verified:
+          flash('Your account has not been verified. Do you want to <a href="{url}">resend the email</a>'.format(
+            url=url_for('resend', verify_key=user.verify_key))
+          )
+          
+          return render_template('login.html', form=form)
+        
         session['user'] = user
         
         flash('You have been logged in')
@@ -116,14 +121,12 @@ def register():
   
   form = RegistrationForm(request.form)
   
-  print User.query.filter_by(username=form.username.data).first()
-  
   if request.method == 'POST' and form.validate():
-    if User.query.filter_by(username=form.username.data):
+    if User.query.filter_by(username=form.username.data).first():
       flash('This username has already been taken')
       return render_template('register.html', form=form)
     
-    if User.query.filter_by(email=form.username.email).all():
+    if User.query.filter_by(email=form.email.data).first():
       flash('An account already exists for the email address')
       return render_template('register.html', form=form)
     
@@ -158,7 +161,7 @@ def register():
     
     mail.send(message)
     
-    flash('Thanks for registering. A email has been sent to "{email}" with a confirmation link.'.format(user.email))
+    flash('Thanks for registering. A email has been sent to "{email}" with a confirmation link.'.format(email=user.email))
     
     return redirect(url_for('login'))
   
@@ -184,20 +187,59 @@ def verify(verify_key):
   
 
 
-@app.route('/register/reset/<username>')
+@app.route('/register/reset/<verify_key>')
 def reset(username):
-  user = User.query.filter_by(username=username).first()
+  user = User.query.filter_by(verify_key=verify_key).first()
   
   if user:
-    flash('An email has been sent to your registered email address')
+    return render_template('reset.html')
     
+  return render_template('index.html')  
+
+
+
+@app.route('/register/resend/<verify_key>')
+def resend(username):
+  user = User.query.filter_by(verify_key=verify_key).first()
+  
+  if user and not user.verified:
+    message = Message('Webminal Account Re-Verification')
+    message.add_recipient(user.email)
+    message.sender = 'Administrator <admin@webminal.org>'
+    
+    message.html = '''
+      <p>Hello {username},</p>
+
+      <p>You recently requested a new account verification link. Click the link below to verify your account:</p>
+
+      <p><a href="{verify_url}">{verify_url}</a></p>
+
+      <p>
+        Have a nice day,
+        <br />
+        The Webminal Team
+      </p>
+    '''
+    
+    message.html = message.html.format(
+      username=user.username,
+      verify_url=url_for('verify', verify_key=user.verify_key)
+    )
+    
+    mail.send(message)
+    
+    return render_template('resend.html')
   return render_template('index.html')  
 
 
 
 @app.route('/terminal')
 def terminal():
-  return render_template('terminal.html')
+  if 'user' in session:
+    return render_template('terminal.html')
+  
+  flash('You must be logged in to use the online terminal')
+  return redirect(url_for('login'))
 
 
 
