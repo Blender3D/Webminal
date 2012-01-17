@@ -1,13 +1,15 @@
-import os, hashlib
+import os, hashlib, base64
 
 from flask import Flask, url_for, render_template, request, flash, redirect, session
 from flaskext.sqlalchemy import SQLAlchemy
+from flaskext.mail import Mail, Message
 
 from wtforms import Form, TextField, PasswordField, BooleanField, validators
 from terminal import Terminal
 
-app = Flask(__name__)
+app = Flask(__name__.split('.')[0])
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{path}/database.db'.format(path=os.getcwd())
+mail = Mail(app)
 
 db = SQLAlchemy(app)
 shellinabox = Terminal()
@@ -38,11 +40,16 @@ class User(db.Model):
   username = db.Column(db.String(80), unique=True)
   email = db.Column(db.String(120), unique=True)
   password = db.Column(db.String(120))
+  verify_key = db.Column(db.String(12), unique=True)
+  verified = db.Column(db.Boolean)
+  
 
   def __init__(self, username, email, password):
     self.email = email
     self.username = username
     self.password = password
+    self.verify_key = base64.urlsafe_b64encode(os.urandom(12))
+    self.verified = False
     
   def createAccount(self):
     print ' * Creating user "{username}".'.format(username=self.username)
@@ -62,7 +69,7 @@ class User(db.Model):
 
 @app.route('/')
 def index():
-  return 'Navigate to http://127.0.0.1:5001/terminal'
+  return render_template('index.html')
 
 
 
@@ -89,7 +96,7 @@ def login():
         flash('You have been logged in')
         
         return redirect(url_for('index'))
-  
+    
     flash('Invalid username or password')
   
   return render_template('login.html', form=form)
@@ -109,18 +116,82 @@ def register():
   
   form = RegistrationForm(request.form)
   
+  print User.query.filter_by(username=form.username.data).first()
+  
   if request.method == 'POST' and form.validate():
+    if User.query.filter_by(username=form.username.data):
+      flash('This username has already been taken')
+      return render_template('register.html', form=form)
+    
+    if User.query.filter_by(email=form.username.email).all():
+      flash('An account already exists for the email address')
+      return render_template('register.html', form=form)
+    
     user = User(form.username.data, form.email.data, form.password.data)
     
     db.session.add(user)
     user.createAccount()
-    
     db.session.commit()
     
-    flash('Thanks for registering')
+    message = Message('Webminal Account Verification')
+    message.add_recipient(user.email)
+    message.sender = 'Administrator <admin@webminal.org>'
+    
+    message.html = '''
+      <p>Hello {username},</p>
+
+      <p>Welcome to Webminal! Before you can begin using your account, you need to activate it using the below link:</p>
+
+      <p><a href="{verify_url}">{verify_url}</a></p>
+
+      <p>
+        Have a nice day,
+        <br />
+        The Webminal Team
+      </p>
+    '''
+    
+    message.html = message.html.format(
+      username=user.username,
+      verify_url=url_for('verify', verify_key=user.verify_key)
+    )
+    
+    mail.send(message)
+    
+    flash('Thanks for registering. A email has been sent to "{email}" with a confirmation link.'.format(user.email))
     
     return redirect(url_for('login'))
+  
   return render_template('register.html', form=form)
+
+
+
+@app.route('/register/verify/<verify_key>')
+def verify(verify_key):
+  if 'user' in session:
+    return redirect(url_for('index'))
+  
+  user = User.query.filter_by(verify_key=verify_key, verified=False).first()
+  
+  if user:
+    user.verified = True
+    db.session.commit()  
+    
+    flash('Your account has been verified')
+    
+    return redirect(url_for('login'))
+  return render_template('index.html')
+  
+
+
+@app.route('/register/reset/<username>')
+def reset(username):
+  user = User.query.filter_by(username=username).first()
+  
+  if user:
+    flash('An email has been sent to your registered email address')
+    
+  return render_template('index.html')  
 
 
 
@@ -134,6 +205,6 @@ if __name__ == '__main__':
   if not shellinabox.process:
     shellinabox.start()
   
-  app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d]\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f'
+  app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d]\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f' # REPLACE ME WHEN RELEASING
   app.debug = True
   app.run()
