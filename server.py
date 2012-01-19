@@ -1,18 +1,19 @@
-import os, hashlib, base64
+import os, re, hashlib, base64, httplib
 
 from flask import Flask, url_for, render_template, request, flash, redirect, session
 from flaskext.sqlalchemy import SQLAlchemy
 from flaskext.mail import Mail, Message
 
+from werkzeug.datastructures import Headers
+
 from wtforms import Form, TextField, PasswordField, BooleanField, validators
-from terminal import Terminal
 
 app = Flask(__name__.split('.')[0])
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{path}/database.db'.format(path=os.getcwd())
 mail = Mail(app)
 
 db = SQLAlchemy(app)
-shellinabox = Terminal()
+
 
 
 class RegistrationForm(Form):
@@ -244,9 +245,6 @@ def terminal():
 
 
 if __name__ == '__main__':
-  if not shellinabox.process:
-    shellinabox.start()
-  
   app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d]\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f' # REPLACE ME WHEN RELEASING
   app.debug = True
   app.run()
