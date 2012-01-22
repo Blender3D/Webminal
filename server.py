@@ -9,7 +9,10 @@ from werkzeug.datastructures import Headers
 from wtforms import Form, TextField, PasswordField, BooleanField, validators
 
 app = Flask(__name__.split('.')[0])
+app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d]\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f' # REPLACE ME WHEN RELEASING
+app.debug = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{path}/database.db'.format(path=os.getcwd())
+
 mail = Mail(app)
 
 db = SQLAlchemy(app)
@@ -71,8 +74,12 @@ def index():
   return render_template('index.html')
 
 
+@app.route('/is_logged_in/')
+def is_logged_in():
+  return 'user' in session
 
-@app.route('/login', methods=['GET', 'POST'])
+
+@app.route('/login/', methods=['GET', 'POST'])
 def login():
   if 'user' in session:
     return redirect(url_for('index'))
@@ -109,13 +116,15 @@ def login():
 
 
 
-@app.route('/logout')
+@app.route('/logout/')
 def logout():
-  session.pop('user', None)
+  if 'user' in session:
+    session.pop('user', None)
+
   return redirect(url_for('index'))
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register/', methods=['GET', 'POST'])
 def register():
   if 'user' in session:
     return redirect(url_for('index'))
@@ -165,12 +174,11 @@ def register():
     flash('Thanks for registering. A email has been sent to "{email}" with a confirmation link.'.format(email=user.email))
     
     return redirect(url_for('login'))
-  
   return render_template('register.html', form=form)
 
 
 
-@app.route('/register/verify/<verify_key>')
+@app.route('/register/verify/<verify_key>/')
 def verify(verify_key):
   if 'user' in session:
     return redirect(url_for('index'))
@@ -188,7 +196,7 @@ def verify(verify_key):
   
 
 
-@app.route('/register/reset/<verify_key>')
+@app.route('/register/reset/<verify_key>/')
 def reset(username):
   user = User.query.filter_by(verify_key=verify_key).first()
   
@@ -199,7 +207,7 @@ def reset(username):
 
 
 
-@app.route('/register/resend/<verify_key>')
+@app.route('/register/resend/<verify_key>/')
 def resend(username):
   user = User.query.filter_by(verify_key=verify_key).first()
   
@@ -234,7 +242,7 @@ def resend(username):
 
 
 
-@app.route('/terminal')
+@app.route('/terminal/')
 def terminal():
   if 'user' in session:
     return render_template('terminal.html')
@@ -245,6 +253,4 @@ def terminal():
 
 
 if __name__ == '__main__':
-  app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d]\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f' # REPLACE ME WHEN RELEASING
-  app.debug = True
   app.run()

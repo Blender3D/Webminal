@@ -1,4 +1,10 @@
 $(function() {
+  $('#terminal iframe').load(function() {
+    $('#terminal iframe').contentWindow.document.keydown(function() {
+      alert('a');
+    });
+  });
+  
   function resizeTerminal(width) {
     if (($(document).width() - width > 300) && (width > 300)) {
       $('#terminal').width(width);
