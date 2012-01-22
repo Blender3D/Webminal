@@ -3,16 +3,82 @@ html, body {
 }
 
 body {
-  background-color: #525252;
-  color: #EEEEEE;
+  font-family: 'Georgia', serif;
   font-size: 16px;
+  
+  background-color: rgb(245, 245, 245);
+}
+
+h2, h3 {
+  font-family: 'Garamond', 'Georgia', serif;
+  font-weight: normal;
 }
 
 h2 {
-  font-weight: bold;
-  font-size: x-large;
+  font-size: 36px;
+  margin: 15px 0 5px 0;
+}
+
+h3 {
+  font-size: 30px;
+  margin: 15px 0 5px 0;
+}
+
+
+.container {
+  width: 740px;
+  margin: 40px auto;
   
-  margin-bottom: 0.5em;
+  text-align: justify;
+}
+
+.nav {
+  list-style: none;
+  height: 40px;
+}
+
+.nav li {
+  float: left;
+  margin-right: 8px;
+}
+
+.nav li a {
+  color: white;
+  text-decoration: none;
+  background-color: hsl(211, 49%, 43%);
+  
+  padding: 5px;
+}
+
+.nav li a:hover {
+  background-color: hsl(211, 49%, 63%);
+}
+
+.notification {
+  position: absolute;
+  
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  height: 70px;
+  
+  line-height: 70px;
+  text-align: center;
+  
+  font-size: 25px;
+  
+  cursor: pointer;
+}
+
+.notification.flash-message {
+  background-color: hsl(211, 49%, 73%);
+  border-bottom: 1px solid hsl(211, 49%, 53%);
+  
+  color: white;
+}
+
+.notification-flash-message:hover {
+  background-color: hsl(211, 49%, 78%);
 }
 
 #side {

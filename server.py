@@ -74,10 +74,6 @@ def index():
   return render_template('index.html')
 
 
-@app.route('/is_logged_in/')
-def is_logged_in():
-  return 'user' in session
-
 
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
@@ -120,7 +116,8 @@ def login():
 def logout():
   if 'user' in session:
     session.pop('user', None)
-
+    flash('You have been logged out')
+  
   return redirect(url_for('index'))
 
 
