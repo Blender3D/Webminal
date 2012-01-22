@@ -190,7 +190,15 @@ def verify(verify_key):
     
     return redirect(url_for('login'))
   return render_template('index.html')
+
+
+@app.route('/login/forgot/')
+def reset():
+  if 'user' in session:
+    return render_template('index.html')
   
+  return render_template('reset.html')
+
 
 
 @app.route('/register/reset/<verify_key>/')

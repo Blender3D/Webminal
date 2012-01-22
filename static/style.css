@@ -81,19 +81,24 @@ h3 {
   background-color: hsl(211, 49%, 78%);
 }
 
-#side {
-  padding: 20px;
-  float: left;
+body.terminal {
+  padding-left: 750px;
+}
+
+body.terminal .container {
+  width: auto;
+  margin: 0px;
+  padding: 10px;
 }
 
 #terminal {
   position: fixed;
+  
   left: 0px;
-  width: 300px;
+  top: 0px;
+  bottom: 0px;
   
-  min-width: 200px;
-  
-  margin-right: 8px;
+  width: 750px;
 }
 
 #terminal iframe {
@@ -101,30 +106,45 @@ h3 {
   width: 100%;
 }
 
-#splitter {
-  position: absolute;
+
+label {
+  width: 135px;
+  text-align: right;
+  float: left;
+  font-size: 16px;
   
-  top: 0px;
-  right: -8px;
-  bottom: 0px;
+  margin-right: 5px;
   
-  background-color: hsl(211, 49%, 43%);
-  width: 8px;
-  
-  cursor: col-resize;
+  line-height: 45px;
+  height: 45px;
 }
 
-#overlay {
-  position: fixed;
+input {
+  width: 220px;
+  display: block;
+  padding: 4px;
+  margin: 0 0 10px 0;
   
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
+  height: 33px;
   
-  z-index: 3;
-  
-  cursor: col-resize;
+  font-size: 18px;
+  color: #3A3A3A;
+  font-family: Georgia, serif;
+}
+
+input[type="checkbox"] {
+  width: 20px;
+  height: 45px;
+  margin: 0;
+  display: inline-block;
+}
+
+input[type="submit"] {
+  margin-left: 145px;
+}
+
+.clear {
+  clear: both;
 }
 
 ::-webkit-scrollbar {

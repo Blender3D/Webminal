@@ -15,28 +15,31 @@
   </head>
 
   <body class="{% block bodyclass %}{% endblock bodyclass %}">
-    <div class="container">
-      {% for category, message in get_flashed_messages(with_categories=true) %}
-        <p class="flash-{{ category }}">{{ message }}</p>
-      {% endfor %}
-      
-      <header>
-        <ul class="nav">
-          <li><a href="{{ url_for('index') }}">Home</a></li>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Contact Us</a></li>
-          
-          {% if 'user' not in session %}
-            <li><a href="{{ url_for('login') }}">Log In</a></li>
-            <li><a href="{{ url_for('register') }}">Register</a></li>
-          {% else %}
-            <li><a href="{{ url_for('logout') }}">Log Out</a></li>
-          {% endif %}
-        </ul>
-      </header>
-      
-      {% block body %}
-      {% endblock body %}
-    </div>
+    {% block contents %}
+      <div class="container">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+          <p class="flash-{{ category }}">{{ message }}</p>
+        {% endfor %}
+        
+        <header>
+          <ul class="nav">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact Us</a></li>
+            
+            {% if 'user' not in session %}
+              <li><a href="{{ url_for('login') }}">Log In</a></li>
+              <li><a href="{{ url_for('register') }}">Register</a></li>
+            {% else %}
+              <li><a href="{{ url_for('terminal') }}">Terminal</a></li>
+              <li><a href="{{ url_for('logout') }}">Log Out</a></li>
+            {% endif %}
+          </ul>
+        </header>
+        
+        {% block body %}
+        {% endblock body %}
+      </div>
+    {% endblock contents %}
   </body>
 </html>

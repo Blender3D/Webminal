@@ -5,12 +5,12 @@
 {% block body %}
   {% from "_formhelpers.html" import render_field %}
   <form method="post" action="{{ url_for('login') }}">
-    <dl>
-      {{ render_field(form.username) }}
-      {{ render_field(form.password) }}
-    </dl>
-    
+    {{ render_field(form.username) }}
+    {{ render_field(form.password) }}
+    <div class="clear"></div>
     <input type="submit" value="Login">
+    <div class="clear"></div>
+    <a href="{{ url_for('reset') }}">Forgot your password?</a>
   </form>
 {% endblock body %}
 
