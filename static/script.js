@@ -1,4 +1,6 @@
 $(function() {
+  $('#command').hide();
+  
   $('.flash-message, .flash-error').each(function() {
     $(this).hide();
     
@@ -10,4 +12,9 @@ $(function() {
     $(this).slideDown('fast');
     setTimeout(function() { $(this).trigger('click'); }, 5000);
   });
+  
 });
+
+function last_command(command) {
+  $('#command').show().text('You ran: ' + command);
+}

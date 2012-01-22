@@ -4618,6 +4618,7 @@ ShellInABox.prototype.sendKeys = function(keys) {
     if (keys == '7F') {
       currentString = currentString.substring(0, currentString.length - 1);
     } else if (keys == '0D') {
+      window.parent.last_command(currentString);
       currentString = '';
     } else {
       var charCode = String.fromCharCode(parseInt(keys, 16));
