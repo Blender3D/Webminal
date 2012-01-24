@@ -12,6 +12,9 @@
     
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='reset.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
+    
+    {% block head %}
+    {% endblock head %}
   </head>
 
   <body class="{% block bodyclass %}{% endblock bodyclass %}">
@@ -22,6 +25,12 @@
         {% endfor %}
         
         <header>
+          <div class="logo">
+            <span class="bracket">[</span>
+            <h1>Webminal</h1>
+            <span class="bracket">]</span>
+          </div>
+          
           <ul class="nav">
             <li><a href="{{ url_for('index') }}">Home</a></li>
             <li><a href="#">About</a></li>

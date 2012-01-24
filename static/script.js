@@ -16,5 +16,5 @@ $(function() {
 });
 
 function last_command(command) {
-  $('#command').show().text('You ran: ' + command);
+  $('#side-content').load('/help/' + command.split(' ')[0] + '/plain/');
 }

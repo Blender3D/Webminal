@@ -1,29 +1,73 @@
 html, body {
   height: 100%;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
   font-family: 'Georgia', serif;
-  font-size: 16px;
-  
-  background-color: rgb(245, 245, 245);
+  font-size: 17px;
+  line-height: 1.4em;
+  color: rgb(62, 67, 73);
 }
 
-h2, h3 {
+h1, .bracket {
+  font-size: 72px;
+}
+
+.bracket {
+  color: hsl(211, 49%, 63%);
+}
+
+h1, h2, h3 {
   font-family: 'Garamond', 'Georgia', serif;
   font-weight: normal;
+  margin: 15px 0 5px 0;
+  
+  line-height: 120%;
 }
 
 h2 {
   font-size: 36px;
-  margin: 15px 0 5px 0;
 }
 
 h3 {
   font-size: 30px;
-  margin: 15px 0 5px 0;
 }
 
+p {
+  margin-bottom: 17px;
+  margin-top: 17px;
+}
+
+pre {
+  padding: 7px 30px;
+  margin: 15px -30px;
+  background: #EEE;
+  
+  line-height: 1.3em;
+  font-family: 'Inconsolata', 'Consolas', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+  font-size: 0.9em;
+}
+
+code {
+  font-family: 'Inconsolata', 'Consolas', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+header h1 {
+  display: inline-block;
+}
+
+header .logo {
+  line-height: 100px;
+  height: 100px;
+  
+  margin-bottom: 20px;
+}
 
 .container {
   width: 740px;
@@ -33,12 +77,16 @@ h3 {
 }
 
 .nav {
+  display: inline-block;
   list-style: none;
   height: 40px;
 }
 
 .nav li {
   float: left;
+}
+
+.nav li:not(:last-child) {
   margin-right: 8px;
 }
 
@@ -66,6 +114,7 @@ h3 {
   text-align: center;
   
   font-size: 25px;
+  margin: 0px;
   
   cursor: pointer;
 }
@@ -85,11 +134,17 @@ body.terminal {
   padding-left: 750px;
 }
 
-body.terminal .container {
-  width: auto;
-  margin: 0px;
-  padding: 10px;
+body.terminal h1, body.terminal .bracket {
+  font-size: 48px;
 }
+
+body.terminal .nav li a {
+  background-color: hsl(211, 49%, 43%);
+  padding: 3px;
+  font-size: 15px;
+}
+
+
 
 #terminal {
   position: fixed;
@@ -97,13 +152,25 @@ body.terminal .container {
   left: 0px;
   top: 0px;
   bottom: 0px;
-  
-  width: 750px;
+  right: 420px;
 }
 
 #terminal iframe {
   height: 100%;
   width: 100%;
+}
+
+#side {
+  padding: 10px;
+  
+  position: fixed;
+  
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  
+  width: 400px;
+  border-left: 25px solid #323232;
 }
 
 
@@ -165,5 +232,5 @@ input[type="submit"] {
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #525252;
+  background-color: white;
 }

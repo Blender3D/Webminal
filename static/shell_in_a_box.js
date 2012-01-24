@@ -1651,7 +1651,13 @@ VT100.prototype.truncateLines = function(width) {
   }
 };
 
+var hasLoggedIn = false;
+
 VT100.prototype.putString = function(x, y, text, color, style) {
+  if (text.indexOf('Last login') != -1) {
+    hasLoggedIn = true;
+  }
+  
   if (!color) {
     color                           = 'ansi0 bgAnsi15';
   }
@@ -4613,18 +4619,18 @@ ShellInABox.prototype.sendKeys = function(keys) {
                                  '&session=' +encodeURIComponent(this.session)+
                                  '&keys=' + encodeURIComponent(keys);
     
-    console.log(keys);
-    
-    if (keys == '7F') {
-      currentString = currentString.substring(0, currentString.length - 1);
-    } else if (keys == '0D') {
-      window.parent.last_command(currentString);
-      currentString = '';
-    } else {
-      var charCode = String.fromCharCode(parseInt(keys, 16));
-      
-      if (charCode) {
-        currentString += charCode;
+    if (hasLoggedIn) {
+      if (keys == '7F') {
+        currentString = currentString.substring(0, currentString.length - 1);
+      } else if (keys == '0D') {
+        window.parent.last_command(currentString);
+        currentString = '';
+      } else {
+        var charCode = String.fromCharCode(parseInt(keys, 16));
+        
+        if (charCode) {
+          currentString += charCode;
+        }
       }
     }
     

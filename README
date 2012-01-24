@@ -1,3 +1,17 @@
-To run the demo:
+Start webminal with uwsgi:
 
-    sudo python server.py
+    sudo uwsgi -s /tmp/webminal.sock -w server:app
+
+Make sure the socket is writable:
+
+    sudo chmod 777 /tmp/webminal.sock
+
+Start shellinaboxd (from the source directory):
+
+    sudo shellinaboxd -s /:LOGIN --disable-ssl -f styles.css:static/shellinabox.css -f ShellInABox.js:static/shell_in_a_box.js --localhost-only -d
+
+Use your webserver to map shellinabox to a URL:
+
+    localhost:4200 -> localhost:80/terminal/proxy/
+
+Enjoy ;)

@@ -1,8 +1,10 @@
 import os, re, hashlib, base64, httplib
 
-from flask import Flask, url_for, render_template, request, flash, redirect, session
+from flask import Flask, url_for, render_template, render_template_string, safe_join, request, flash, redirect, session
+
 from flaskext.sqlalchemy import SQLAlchemy
 from flaskext.mail import Mail, Message
+from flaskext.flatpages import FlatPages, pygments_style_defs, pygmented_markdown
 
 from werkzeug.datastructures import Headers
 
@@ -11,10 +13,14 @@ from wtforms import Form, TextField, PasswordField, BooleanField, validators
 app = Flask(__name__.split('.')[0])
 app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d]\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f' # REPLACE ME WHEN RELEASING
 app.debug = True
+
+app.config['FLATPAGES_ROOT'] = 'templates/help'
+app.config['FLATPAGES_EXTENSION'] = '.md'
+app.config['FLATPAGES_AUTO_RELOAD'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{path}/database.db'.format(path=os.getcwd())
 
 mail = Mail(app)
-
+pages = FlatPages(app)
 db = SQLAlchemy(app)
 
 
@@ -72,6 +78,12 @@ class User(db.Model):
 @app.route('/')
 def index():
   return render_template('index.html')
+
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+  return render_template('404.html'), 404
 
 
 
@@ -254,6 +266,32 @@ def terminal():
   
   flash('You must be logged in to use the online terminal')
   return redirect(url_for('login'))
+
+
+
+@app.route('/help/<command>/')
+def help_command(command):
+  return redirect(url_for('help_command_full', command=command))
+
+
+@app.route('/help/<command>/plain/')
+def help_command_plain(command):
+  content = pages.get(command)
+  
+  if not content:
+    return render_template('404.html'), 404
+  
+  return render_template('help_plain.html', content=content)
+
+
+@app.route('/help/<command>/full/')
+def help_command_full(command):
+  content = pages.get(command)
+  
+  if not content:
+    return render_template('404.html'), 404
+  
+  return render_template('help_full.html', content=content)
 
 
 
