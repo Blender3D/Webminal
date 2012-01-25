@@ -1,17 +1,22 @@
-Start webminal with uwsgi:
+If you want to set this up on your server, you'll need uwsgi.
 
-    sudo uwsgi -s /tmp/webminal.sock -w server:app
+Add this to Apache's config (after installing uwsgi):
 
-Make sure the socket is writable:
+    <Location />
+      SetHandler uwsgi-handler
+      uWSGISocket 127.0.0.1:1973
+    </Location>
 
-    sudo chmod 777 /tmp/webminal.sock
+And run Webminal (from the source directory):
 
-Start shellinaboxd (from the source directory):
+    uwsgi -s 127.0.0.1:1973 -w server:app
+
+Then start SIAB (from the source directory again):
 
     sudo shellinaboxd -s /:LOGIN --disable-ssl -f styles.css:static/shellinabox.css -f ShellInABox.js:static/shell_in_a_box.js --localhost-only -d
 
-Use your webserver to map shellinabox to a URL:
+My config assumes that you have this mapping:
 
-    localhost:4200 -> localhost:80/terminal/proxy/
+    localhost:4200 -> localhost/terminal/proxy/
 
 Enjoy ;)
