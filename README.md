@@ -8,6 +8,8 @@ You'll need to setup a proper uwsgi handler and proxy for your webserver.
 
 ### Apache
 
+You'll need `mod_uwsgi` enabled for this configuration to work:
+
     <Location /terminal/proxy/>
       ProxyPass  http://localhost:4200/
       Order      allow,deny
@@ -20,6 +22,8 @@ You'll need to setup a proper uwsgi handler and proxy for your webserver.
     </Location>
 
 ### nginx
+
+nginx already has uwsgi support:
 
     location /terminal/proxy {
       rewrite           ^/terminal/proxy/(.*)$ /$1 break;
