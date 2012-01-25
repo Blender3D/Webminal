@@ -30,7 +30,7 @@ You'll need to setup a proper uwsgi handler and proxy for your webserver.
     location / { try_files $uri @webminal; }
     location @webminal {
       include     uwsgi_params;
-      uwsgi_pass  http://localhost:1973;
+      uwsgi_pass  localhost:1973;
     }
 
 ## Webminal
