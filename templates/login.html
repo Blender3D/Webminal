@@ -7,10 +7,9 @@
   <form method="post" action="{{ url_for('login') }}">
     {{ render_field(form.username) }}
     {{ render_field(form.password) }}
-    <div class="clear"></div>
-    <input type="submit" value="Login">
-    <div class="clear"></div>
-    <a href="{{ url_for('reset') }}">Forgot your password?</a>
+    
+    <input type="submit" class="btn" value="Login" />
+    <a href="{{ url_for('forgot') }}">Forgot your password?</a>
   </form>
 {% endblock body %}
 

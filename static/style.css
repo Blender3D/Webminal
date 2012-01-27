@@ -76,7 +76,7 @@ header .logo {
   text-align: justify;
 }
 
-.nav {
+header .nav {
   display: inline-block;
   list-style: none;
   height: 40px;
@@ -126,9 +126,44 @@ header .logo {
   color: white;
 }
 
+.notification.flash-warning {
+  background-color: hsl(40, 49%, 73%);
+  border-bottom: 1px solid hsl(40, 49%, 53%);
+  
+  color: white;
+}
+
+.notification.flash-error {
+  background-color: hsl(0, 49%, 73%);
+  border-bottom: 1px solid hsl(0, 49%, 53%);
+  
+  color: white;
+}
+
 .notification-flash-message:hover {
   background-color: hsl(211, 49%, 78%);
 }
+
+
+
+form .form-error-message {
+  display: inline-block;
+  color: hsl(0, 49%, 53%);
+
+  font-size: 16px;
+}
+
+form .form-error {
+  color: hsl(0, 49%, 53%);
+}
+
+form .form-error input {
+  color: hsl(0, 49%, 53%);
+  border-color: hsl(0, 49%, 53%);
+  background-color: hsl(0, 49%, 83%);
+}
+
+
 
 body.terminal {
   padding-left: 750px;
@@ -142,6 +177,10 @@ body.terminal .nav li a {
   background-color: hsl(211, 49%, 43%);
   padding: 3px;
   font-size: 15px;
+}
+
+body.terminal .nav li a:hover {
+  background-color: hsl(211, 49%, 63%);
 }
 
 
@@ -173,46 +212,123 @@ body.terminal .nav li a {
   border-left: 25px solid #323232;
 }
 
+#overlay {
+  position: fixed;
+  
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  
+  width: 440px;
+  
+  background-color: black;
+  
+  background-image: url('/static/spinner.gif');
+  background-position: center center;
+  background-repeat: no-repeat;
+  
+	zoom: 1;
+	filter: alpha(opacity=50);
+	opacity: 0.5;
+  
+  z-index: 5;
+}
+
+a:hover {
+  color: #00438A;
+  text-decoration: underline;
+
+}
+
+.btn.active,.btn:active {
+  -webkit-box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.25),0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.25),0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.25),0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+
+.btn {
+  cursor: pointer;
+  display: inline-block;
+  background-color: #E6E6E6;
+  background-repeat: no-repeat;
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(white), color-stop(25%, white), to(#E6E6E6));
+  background-image: -webkit-linear-gradient(white, white 25%, #E6E6E6);
+  background-image: -moz-linear-gradient(top, white, white 25%, #E6E6E6);
+  background-image: -ms-linear-gradient(white, white 25%, #E6E6E6);
+  background-image: -o-linear-gradient(white, white 25%, #E6E6E6);
+  background-image: linear-gradient(white, white 25%, #E6E6E6);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#e6e6e6', GradientType=0);
+  padding: 5px 14px 6px;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+  color: #333;
+  font-size: 13px;
+  line-height: normal;
+  border: 1px solid #CCC;
+  border-bottom-color: #BBB;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -webkit-transition: 0.1s linear all;
+  -moz-transition: 0.1s linear all;
+  -ms-transition: 0.1s linear all;
+  -o-transition: 0.1s linear all;
+  transition: 0.1s linear all;
+}
+
+
+button, input[type="submit"] {
+  width: auto;
+  height: auto;
+}
+
+
+
+form .clearfix {
+  margin-bottom: 18px;
+  zoom: 1;
+}
+
+form .input {
+  margin-left: 150px;
+}
+
+input, textarea {
+  -webkit-transition: border linear 0.2s,box-shadow linear 0.2s;
+  -moz-transition: border linear 0.2s,box-shadow linear 0.2s;
+  -ms-transition: border linear 0.2s,box-shadow linear 0.2s;
+  -o-transition: border linear 0.2s,box-shadow linear 0.2s;
+  transition: border linear 0.2s,box-shadow linear 0.2s;
+  -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+input, textarea, select {
+  display: inline-block;
+  width: 210px;
+  height: 18px;
+  padding: 4px;
+  font-size: 13px;
+  line-height: 18px;
+  color: gray;
+  border: 1px solid #CCC;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+}
 
 label {
-  width: 135px;
-  text-align: right;
+  line-height: 18px;
   float: left;
-  font-size: 16px;
-  
-  margin-right: 5px;
-  
-  line-height: 45px;
-  height: 45px;
+  width: 130px;
+  text-align: right;
 }
 
-input {
-  width: 220px;
-  display: block;
-  padding: 4px;
-  margin: 0 0 10px 0;
-  
-  height: 33px;
-  
-  font-size: 18px;
-  color: #3A3A3A;
-  font-family: Georgia, serif;
-}
 
-input[type="checkbox"] {
-  width: 20px;
-  height: 45px;
-  margin: 0;
-  display: inline-block;
-}
-
-input[type="submit"] {
-  margin-left: 145px;
-}
-
-.clear {
-  clear: both;
-}
 
 ::-webkit-scrollbar {
   width: 9px;

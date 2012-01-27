@@ -4,13 +4,11 @@
 
 {% block body %}
   {% from "_formhelpers.html" import render_field %}
-  <form method="post" action="{{ url_for('reset', verify_key=verify_key) }}">
+  <form method="post" action="{{ url_for('forgot') }}">
     {{ render_field(form.username) }}
     {{ render_field(form.email) }}
-    {{ render_field(form.password) }}
-    {{ render_field(form.confirm) }}
     
-    <input type="submit" class="btn" value="Reset password" />
+    <input type="submit" class="btn" value="Send reset" />
   </form>
 {% endblock body %}
 

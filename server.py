@@ -1,4 +1,4 @@
-import os, re, hashlib, base64, httplib
+import os, re, hashlib, base64, httplib, time
 
 from flask import Flask, url_for, render_template, render_template_string, safe_join, request, flash, redirect, session
 
@@ -10,6 +10,8 @@ from werkzeug.datastructures import Headers
 
 from wtforms import Form, TextField, PasswordField, BooleanField, validators
 
+
+
 app = Flask(__name__.split('.')[0])
 app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d]\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f' # REPLACE ME WHEN RELEASING
 app.debug = True
@@ -17,7 +19,16 @@ app.debug = True
 app.config['FLATPAGES_ROOT'] = 'templates/help'
 app.config['FLATPAGES_EXTENSION'] = '.md'
 app.config['FLATPAGES_AUTO_RELOAD'] = True
+
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_SERVER'] = ''
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = ''
+app.config['MAIL_PASSWORD'] = ''
+
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{path}/database.db'.format(path=os.getcwd())
+
 
 mail = Mail(app)
 pages = FlatPages(app)
@@ -45,6 +56,24 @@ class LoginForm(Form):
 
 
 
+class ResetLoginForm(Form):
+  username = TextField('Username', [validators.Length(min=4, max=25)])
+  email = TextField('Email Address', [validators.Length(min=6, max=35)])
+
+
+
+class ResetForm(Form):
+  username = TextField('Username', [validators.Length(min=4, max=25)])
+  email = TextField('Email Address', [validators.Length(min=6, max=35)])
+  password = PasswordField('New Password', [
+    validators.Required(),
+    validators.EqualTo('confirm', message='Passwords must match')
+  ])
+  
+  confirm = PasswordField('Repeat Password')
+
+
+
 class User(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   username = db.Column(db.String(80), unique=True)
@@ -52,7 +81,6 @@ class User(db.Model):
   password = db.Column(db.String(120))
   verify_key = db.Column(db.String(12), unique=True)
   verified = db.Column(db.Boolean)
-  
 
   def __init__(self, username, email, password):
     self.email = email
@@ -61,15 +89,23 @@ class User(db.Model):
     self.verify_key = base64.urlsafe_b64encode(os.urandom(12))
     self.verified = False
     
-  def createAccount(self):
+  def create_account(self):
     print ' * Creating user "{username}".'.format(username=self.username)
     # ADD USER CREATION CODE HERE
+    self.set_password(password)
+  
+  def set_password(self, password):
     self.password = hashlib.sha512(
       hashlib.sha512(self.username).hexdigest() + 
-      hashlib.sha512(self.password).hexdigest() + 
+      hashlib.sha512(password).hexdigest() + 
       hashlib.sha512(self.email).hexdigest()
     ).hexdigest()
+  
+  def generate_verify_key(self):
+    self.verify_key = base64.urlsafe_b64encode(os.urandom(12))
     
+    return self.verify_key
+  
   def __repr__(self):
     return '<User {username}>'.format(username=self.username)
 
@@ -118,7 +154,7 @@ def login():
         
         return redirect(url_for('index'))
     
-    flash('Invalid username or password')
+    flash('Invalid username or password', category='error')
   
   return render_template('login.html', form=form)
 
@@ -142,17 +178,17 @@ def register():
   
   if request.method == 'POST' and form.validate():
     if User.query.filter_by(username=form.username.data).first():
-      flash('This username has already been taken')
+      flash('This username has already been taken', category='warning')
       return render_template('register.html', form=form)
     
     if User.query.filter_by(email=form.email.data).first():
-      flash('An account already exists for the email address')
+      flash('An account already exists for the email address', category='warning')
       return render_template('register.html', form=form)
     
     user = User(form.username.data, form.email.data, form.password.data)
     
     db.session.add(user)
-    user.createAccount()
+    user.create_account()
     db.session.commit()
     
     message = Message('Webminal Account Verification')
@@ -204,23 +240,78 @@ def verify(verify_key):
   return render_template('index.html')
 
 
-@app.route('/login/forgot/')
-def reset():
+
+@app.route('/login/forgot/', methods=['GET', 'POST'])
+def forgot():
   if 'user' in session:
-    return render_template('index.html')
+    return redirect(url_for('index'))
   
-  return render_template('reset.html')
-
-
-
-@app.route('/register/reset/<verify_key>/')
-def reset(username):
-  user = User.query.filter_by(verify_key=verify_key).first()
+  form = ResetLoginForm(request.form)
   
-  if user:
-    return render_template('reset.html')
+  if request.method == 'POST' and form.validate():
+    user = User.query.filter_by(username=form.username.data, email=form.email.data).first()
     
-  return render_template('index.html')  
+    if not user:
+      flash('The username or email incorrect')
+      return render_template('forgot.html', form=form)
+    
+    message = Message('Webminal Account Password Reset')
+    message.add_recipient(user.email)
+    message.sender = 'Administrator <admin@webminal.org>'
+    
+    message.html = '''
+      <p>Hello {username},</p>
+
+      <p>You recently requested a password reset. Click the link below to reset your password:</p>
+
+      <p><a href="{reset_url}">{reset_url}</a></p>
+
+      <p>
+        Have a nice day,
+        <br />
+        The Webminal Team
+      </p>
+    '''
+    
+    message.html = message.html.format(
+      username=user.username,
+      reset_url=url_for('reset', verify_key=user.generate_verify_key())
+    )
+    
+    db.session.commit()
+    
+    print 'Sending email...'
+    mail.send(message)
+    
+    flash('An email with reset instructions has been sent to your email address')
+    return redirect(url_for('index'))
+  
+  return render_template('forgot.html', form=form)
+
+
+
+@app.route('/register/reset/<verify_key>/', methods=['GET', 'POST'])
+def reset(verify_key):
+  if 'user' in session:
+    return redirect(url_for('index'))
+  
+  form = ResetForm(request.form)
+  
+  if request.method == 'POST' and form.validate():
+    user = User.query.filter_by(username=form.username.data, email=form.email.data, verify_key=verify_key).first()
+    
+    if not user:
+      flash('The username or email incorrect')
+      return render_template('reset.html', form=form, verify_key=verify_key)
+    
+    user.generate_verify_key()
+    user.set_password(form.password.data)
+    db.session.commit()
+    
+    flash('Your password has been reset')
+    return redirect(url_for('login'))
+    
+  return render_template('reset.html', form=form, verify_key=verify_key)
 
 
 
@@ -255,6 +346,7 @@ def resend(username):
     mail.send(message)
     
     return render_template('resend.html')
+  
   return render_template('index.html')  
 
 
@@ -264,7 +356,7 @@ def terminal():
   if 'user' in session:
     return render_template('terminal.html')
   
-  flash('You must be logged in to use the online terminal')
+  flash('You must be logged in to use the online terminal', category='warning')
   return redirect(url_for('login'))
 
 
@@ -276,10 +368,11 @@ def help_command(command):
 
 @app.route('/help/<command>/plain/')
 def help_command_plain(command):
+  time.sleep(1)
   content = pages.get(command)
   
   if not content:
-    return render_template('404.html'), 404
+    return render_template('help_plain.html', content=pages.get('404'))
   
   return render_template('help_plain.html', content=content)
 
