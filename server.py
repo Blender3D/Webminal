@@ -92,7 +92,7 @@ class User(db.Model):
   def create_account(self):
     print ' * Creating user "{username}".'.format(username=self.username)
     # ADD USER CREATION CODE HERE
-    self.set_password(password)
+    self.set_password(self.password)
   
   def set_password(self, password):
     self.password = hashlib.sha512(
