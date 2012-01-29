@@ -1,7 +1,7 @@
 $(function() {
   $('#command').hide();
   
-  $('.flash-message, .flash-error, .flash-warning').each(function() {
+  $('.flash-message, .flash-error, .flash-warning, .flash-success').each(function() {
     $(this).hide().addClass('notification');
     
     $(this).on('click', function() {

@@ -6,11 +6,7 @@ from flaskext.sqlalchemy import SQLAlchemy
 from flaskext.mail import Mail, Message
 from flaskext.flatpages import FlatPages, pygments_style_defs, pygmented_markdown
 
-from werkzeug.datastructures import Headers
-
 from wtforms import Form, TextField, PasswordField, BooleanField, validators
-
-
 
 app = Flask(__name__.split('.')[0])
 app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d]\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f' # REPLACE ME WHEN RELEASING
@@ -20,6 +16,7 @@ app.config['FLATPAGES_ROOT'] = 'templates/help'
 app.config['FLATPAGES_EXTENSION'] = '.md'
 app.config['FLATPAGES_AUTO_RELOAD'] = True
 
+app.config['MAIL'] = False
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_SERVER'] = ''
 app.config['MAIL_USE_SSL'] = False
@@ -214,7 +211,10 @@ def register():
       verify_url=url_for('verify', verify_key=user.verify_key)
     )
     
-    mail.send(message)
+    if app.config['MAIL']:
+      mail.send(message)
+    else:
+      print message.html
     
     flash('Thanks for registering. A email has been sent to "{email}" with a confirmation link.'.format(email=user.email))
     
@@ -280,8 +280,10 @@ def forgot():
     
     db.session.commit()
     
-    print 'Sending email...'
-    mail.send(message)
+    if app.config['MAIL']:
+      mail.send(message)
+    else:
+      print message.html
     
     flash('An email with reset instructions has been sent to your email address')
     return redirect(url_for('index'))
@@ -316,8 +318,11 @@ def reset(verify_key):
 
 
 @app.route('/register/resend/<verify_key>/')
-def resend(username):
+def resend(verify_key):
   user = User.query.filter_by(verify_key=verify_key).first()
+  
+  if not user:
+    return render_template('resend.html', message='Your verification key is invalid')
   
   if user and not user.verified:
     message = Message('Webminal Account Re-Verification')
@@ -340,12 +345,17 @@ def resend(username):
     
     message.html = message.html.format(
       username=user.username,
-      verify_url=url_for('verify', verify_key=user.verify_key)
+      verify_url=url_for('verify', verify_key=user.generate_verify_key())
     )
     
-    mail.send(message)
+    db.session.commit()
     
-    return render_template('resend.html')
+    if app.config['MAIL']:
+      mail.send(message)
+    else:
+      print message.html
+    
+    return render_template('resend.html', message='A new verification link was sent to your registered email')
   
   return render_template('index.html')  
 

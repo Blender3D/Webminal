@@ -3,7 +3,7 @@
 {% block title %}Webminal{% endblock title %}
 
 {% block body %}
-  <h2>A new verification link was sent to your registered email</h2>
+  <h2>{{ message }}</h2>
   
   <a href="{{ url_for('index') }}">Click here</a> to go back to Webminal.
 {% endblock body %}

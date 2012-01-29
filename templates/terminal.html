@@ -10,7 +10,7 @@
   
   <div id="side">
     {% for category, message in get_flashed_messages(with_categories=true) %}
-      <p class="flash-{{ category }}">{{ message }}</p>
+      <p class="flash-{{ category }}">{{ message|safe }}</p>
     {% endfor %}
     
     <header>

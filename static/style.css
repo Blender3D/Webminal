@@ -126,6 +126,13 @@ header .nav {
   color: white;
 }
 
+.notification.flash-success {
+  background-color: hsl(128, 49%, 73%);
+  border-bottom: 1px solid hsl(128, 49%, 53%);
+  
+  color: white;
+}
+
 .notification.flash-warning {
   background-color: hsl(40, 49%, 73%);
   border-bottom: 1px solid hsl(40, 49%, 53%);
@@ -139,11 +146,6 @@ header .nav {
   
   color: white;
 }
-
-.notification-flash-message:hover {
-  background-color: hsl(211, 49%, 78%);
-}
-
 
 
 form .form-error-message {
