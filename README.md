@@ -53,3 +53,59 @@ Then start [ShellInABox](http://code.google.com/p/shellinabox/) (from the source
         --localhost-only -d
 
 Enjoy ;)
+
+# Hacking Instructions
+
+Webminal is coded using the Flask Python microframework and a few extensions (`flask-sqlalchemy`, `flask-wtf`, `flask-mail`, `flask-flatpages` and `wtforms`). You can use `pip` or `easy_install` to install the modules.
+
+## Code structure
+
+All of the serverside code is inside of `server.py`. The syntax is fairly readable.
+
+For instance, this code renders the index page when it is requested:
+
+    @app.route('/')
+    def index():
+      return render_template('index.html')
+
+A more complex example involving sessions:
+
+    @app.route('/terminal/')
+    def terminal():
+      if 'user' in session:
+        return render_template('terminal.html')
+      
+      flash('You must be logged in to use the online terminal', category='warning')
+      return redirect(url_for('login'))
+
+The `flash()` function sends a message along with the rendered template that will pop up on screen as the colored bar on top. The currently-implemented categories are `message`, `warning`, `error` and `success`.
+
+## Templates
+
+One reason I chose Flask for the backend is because it is very tightly integrated with the Jinja2 templating engine.
+
+Templates are stored in the `templates/` directory and are HTML-like files that support scripting, inheritance, logic, etc.
+
+There is a master `layout.html` template that holds the actual HTML structure, `<head>` tag, the menu, and basically anything that doesn't change from page to page.
+
+Most templates inherit from `layout.html` using this basic code:
+
+    {% extends "layout.html" %}
+
+    {% block title %}Webminal{% endblock title %}
+
+    {% block body %}
+      <h2>Welcome to Webminal, the GNU/Linux Online Terminal</h2>
+      
+      {{ lipsum(20) }}
+    {% endblock body %}
+
+The `{% block %}` statements are defined inside of `layout.html`. Anything within a `{% block %}` statement is piped to the respective block in the parent template.
+
+Templates also support logic and many filters. For example, the message flashing code:
+
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+        <p class="flash-{{ category }}">{{ message|safe }}</p>
+      {% endfor %}
+
+If you want to actually learn Flask, just follow the [basic tutorial](http://flask.pocoo.org/docs/tutorial/) on Flask's website. The API is amazingly well-written as well, so don't be afraid to use it.
