@@ -139,7 +139,7 @@ def login():
       
       if password_hash == user.password:
         if not user.verified:
-          flash('Your account has not been verified. Do you want to <a href="{url}">resend the email</a>'.format(
+          flash('Your account has not been verified. Do you want to <a href="{url}">resend the email</a>?'.format(
             url=url_for('resend', verify_key=user.verify_key))
           )
           

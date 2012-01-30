@@ -146,7 +146,7 @@ function VT100(container) {
   } else {
     this.urlRE            = new RegExp(
     // Known URL protocol are "http", "https", and "ftp".
-    '(?:http|https|ftp)://' +
+    '(?:http|https|ftp|sftp|ssh)://' +
 
     // Optionally allow username and passwords.
     '(?:[^:@/ \u00A0]*(?::[^@/ \u00A0]*)?@)?' +
@@ -383,133 +383,6 @@ VT100.prototype.storeUserSettings = function() {
   var d         = new Date();
   d.setDate(d.getDate() + 3653);
   document.cookie = settings + ';expires=' + d.toGMTString();
-};
-
-VT100.prototype.initializeUserCSSStyles = function() {
-  this.usercssActions                    = [];
-  if (typeof userCSSList != 'undefined') {
-    var menu                             = '';
-    var group                            = '';
-    var wasSingleSel                     = 1;
-    var beginOfGroup                     = 0;
-    for (var i = 0; i <= userCSSList.length; ++i) {
-      if (i < userCSSList.length) {
-        var label                        = userCSSList[i][0];
-        var newGroup                     = userCSSList[i][1];
-        var enabled                      = userCSSList[i][2];
-      
-        // Add user style sheet to document
-        var style                        = document.createElement('link');
-        var id                           = document.createAttribute('id');
-        id.nodeValue                     = 'usercss-' + i;
-        style.setAttributeNode(id);
-        var rel                          = document.createAttribute('rel');
-        rel.nodeValue                    = 'stylesheet';
-        style.setAttributeNode(rel);
-        var href                         = document.createAttribute('href');
-        href.nodeValue                   = 'usercss-' + i + '.css';
-        style.setAttributeNode(href);
-        var type                         = document.createAttribute('type');
-        type.nodeValue                   = 'text/css';
-        style.setAttributeNode(type);
-        document.getElementsByTagName('head')[0].appendChild(style);
-        style.disabled                   = !enabled;
-      }
-    
-      // Add entry to menu
-      if (newGroup || i == userCSSList.length) {
-        if (beginOfGroup != 0 && (i - beginOfGroup > 1 || !wasSingleSel)) {
-          // The last group had multiple entries that are mutually exclusive;
-          // or the previous to last group did. In either case, we need to
-          // append a "<hr />" before we can add the last group to the menu.
-          menu                          += '<hr />';
-        }
-        wasSingleSel                     = i - beginOfGroup < 1;
-        menu                            += group;
-        group                            = '';
-
-        for (var j = beginOfGroup; j < i; ++j) {
-          this.usercssActions[this.usercssActions.length] =
-            function(vt100, current, begin, count) {
-
-              // Deselect all other entries in the group, then either select
-              // (for multiple entries in group) or toggle (for on/off entry)
-              // the current entry.
-              return function() {
-                var entry                = vt100.getChildById(vt100.menu,
-                                                              'beginusercss');
-                var i                    = -1;
-                var j                    = -1;
-                for (var c = count; c > 0; ++j) {
-                  if (entry.tagName == 'LI') {
-                    if (++i >= begin) {
-                      --c;
-                      var label          = vt100.usercss.childNodes[j];
-
-                      // Restore label to just the text content
-                      if (typeof label.textContent == 'undefined') {
-                        var s            = label.innerText;
-                        label.innerHTML  = '';
-                        label.appendChild(document.createTextNode(s));
-                      } else {
-                        label.textContent= label.textContent;
-                      }
-
-                      // User style sheets are numbered sequentially
-                      var sheet          = document.getElementById(
-                                                               'usercss-' + i);
-                      if (i == current) {
-                        if (count == 1) {
-                          sheet.disabled = !sheet.disabled;
-                        } else {
-                          sheet.disabled = false;
-                        }
-                        if (!sheet.disabled) {
-                          label.innerHTML= '<img src="enabled.gif" />' +
-                                           label.innerHTML;
-                        }
-                      } else {
-                        sheet.disabled   = true;
-                      }
-                      userCSSList[i][2]  = !sheet.disabled;
-                    }
-                  }
-                  entry                  = entry.nextSibling;
-                }
-
-                // If the font size changed, adjust cursor and line dimensions
-                this.cursor.style.cssText= '';
-                this.cursorWidth         = this.cursor.clientWidth;
-                this.cursorHeight        = this.lineheight.clientHeight;
-                for (i = 0; i < this.console.length; ++i) {
-                  for (var line = this.console[i].firstChild; line;
-                       line = line.nextSibling) {
-                    line.style.height    = this.cursorHeight + 'px';
-                  }
-                }
-                vt100.resizer();
-              };
-            }(this, j, beginOfGroup, i - beginOfGroup);
-        }
-
-        if (i == userCSSList.length) {
-          break;
-        }
-
-        beginOfGroup                     = i;
-      }
-      // Collect all entries in a group, before attaching them to the menu.
-      // This is necessary as we don't know whether this is a group of
-      // mutually exclusive options (which should be separated by "<hr />" on
-      // both ends), or whether this is a on/off toggle, which can be grouped
-      // together with other on/off options.
-      group                             +=
-        '<li>' + (enabled ? '<img src="enabled.gif" />' : '') +
-                 label +
-        '</li>';
-    }
-    this.usercss.innerHTML               = menu;
-  }
 };
 
 VT100.prototype.resetLastSelectedKey = function(e) {
@@ -923,7 +796,7 @@ VT100.prototype.initializeElements = function(container) {
                          (typeof suppressAllAudio != 'undefined' &&
                           suppressAllAudio ? "" :
                          embed + '<bgsound id="beep_bgsound" loop=1 />') +
-                          '<iframe id="layout" src="keyboard.html" />' +
+                          '<iframe id="layout" src="../keyboard.html" />' +
                         '</div>';
   }
 
@@ -964,9 +837,6 @@ VT100.prototype.initializeElements = function(container) {
   this.input                   = this.getChildById(this.container, 'input');
   this.cliphelper              = this.getChildById(this.container,
                                                                  'cliphelper');
-
-  // Add any user selectable style sheets to the menu
-  this.initializeUserCSSStyles();
 
   // Remember the dimensions of a standard character glyph. We would
   // expect that we could just check cursor.clientWidth/Height at any time,
@@ -2461,13 +2331,13 @@ VT100.prototype.showContextMenu = function(x, y) {
           '<li id="reset">Reset</li>' +
           '<hr />' +
           '<li id="beginconfig">' +
-             (this.utfEnabled ? '<img src="enabled.gif" />' : '') +
+             (this.utfEnabled ? '<img src="../enabled.gif" />' : '') +
              'Unicode</li>' +
           '<li>' +
-             (this.visualBell ? '<img src="enabled.gif" />' : '') +
+             (this.visualBell ? '<img src="../enabled.gif" />' : '') +
              'Visual Bell</li>'+
           '<li id="endconfig">' +
-             (this.blinkingCursor ? '<img src="enabled.gif" />' : '') +
+             (this.blinkingCursor ? '<img src="../enabled.gif" />' : '') +
              'Blinking Cursor</li>'+
           (this.usercss.firstChild ?
            '<hr id="beginusercss" />' +
@@ -2498,15 +2368,6 @@ VT100.prototype.showContextMenu = function(x, y) {
   var actions                 = [ this.copyLast, p, this.reset,
                                   this.toggleUTF, this.toggleBell,
                                   this.toggleCursorBlinking ];
-
-  // Actions for user CSS styles (if any)
-  for (var i = 0; i < this.usercssActions.length; ++i) {
-    actions[actions.length]   = this.usercssActions[i];
-  }
-  actions[actions.length]     = this.about;
-
-  // Allow subclasses to dynamically add entries to the context menu
-  this.extendContextMenu(menuentries, actions);
 
   // Hook up event listeners
   for (var node = menuentries.firstChild, i = 0; node;
@@ -3288,6 +3149,7 @@ VT100.prototype.respondSecondaryDA = function() {
 
 
 VT100.prototype.updateStyle = function() {
+  
   this.style   = '';
   if (this.attr & 0x0200 /* ATTR_UNDERLINE */) {
     this.style = 'text-decoration:underline;';
@@ -3304,9 +3166,15 @@ VT100.prototype.updateStyle = function() {
   } else if (this.attr & 0x0800 /* ATTR_BRIGHT */) {
     fg        |= 8;
   }
+  
   if (this.attr & 0x1000 /* ATTR_BLINK */) {
     bg        ^= 8;
   }
+  
+  if (this.attr == 2292 || this.attr == 2290 || this.attr == 2295) {
+    this.style = 'font-weight:bold;';
+  }
+  
   // Make some readability enhancements. Most notably, disallow identical
   // background and foreground colors.
   if (bg == fg) {
@@ -4168,6 +4036,7 @@ VT100.prototype.renderString = function(s, showCursor) {
     // call to this.showCursor()
     this.cursor.style.visibility = '';
   }
+  
   this.putString(this.cursorX, this.cursorY, s, this.color, this.style);
 };
 
@@ -4270,6 +4139,9 @@ VT100.prototype.vt100 = function(s) {
   } else if (this.cursorNeedsShowing) {
     this.showCursor();
   }
+  
+  
+  
   return this.respondString;
 };
 
@@ -4550,7 +4422,7 @@ ShellInABox.prototype.sendRequest = function(request) {
   if (request == undefined) {
     request                  = new XMLHttpRequest();
   }
-  request.open('POST', this.url + '?', true);
+  request.open('POST', '../?', true);
   request.setRequestHeader('Cache-Control', 'no-cache');
   request.setRequestHeader('Content-Type',
                            'application/x-www-form-urlencoded; charset=utf-8');
@@ -4610,7 +4482,7 @@ ShellInABox.prototype.sendKeys = function(keys) {
     keys                       = this.pendingKeys + keys;
     this.pendingKeys           = '';
     var request                = new XMLHttpRequest();
-    request.open('POST', this.url + '?', true);
+    request.open('POST', '../?', true);
     request.setRequestHeader('Cache-Control', 'no-cache');
     request.setRequestHeader('Content-Type',
                            'application/x-www-form-urlencoded; charset=utf-8');
@@ -4623,7 +4495,10 @@ ShellInABox.prototype.sendKeys = function(keys) {
       if (keys == '7F') {
         currentString = currentString.substring(0, currentString.length - 1);
       } else if (keys == '0D') {
-        window.parent.last_command(currentString);
+        if (window.parent.last_command) {
+          window.parent.last_command(currentString);
+        }
+        
         currentString = '';
       } else {
         var charCode = String.fromCharCode(parseInt(keys, 16));

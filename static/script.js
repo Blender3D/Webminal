@@ -20,10 +20,13 @@ $(function() {
 });
 
 function last_command(command) {
-  $('#overlay').show();
-  
-  $.get('/help/' + command.split(' ')[0] + '/plain/').success(function(data) {
-    $('#side-content').html(data);
-    $('#overlay').stop().fadeOut();
-  });
+  if (command != '') {
+    var url = '/help/' + command.split(' ')[0] + '/plain/';
+    $('#overlay').show();
+    
+    $.get(url).success(function(data) {
+      $('#side-content').html(data);
+      $('#overlay').stop().fadeOut();
+    });
+  }
 }

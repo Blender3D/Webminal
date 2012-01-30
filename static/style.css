@@ -4,7 +4,7 @@ html, body {
 }
 
 body {
-  font-family: 'Georgia', serif;
+  font-family: 'Telex', serif;
   font-size: 17px;
   line-height: 1.4em;
   color: rgb(62, 67, 73);
@@ -19,7 +19,7 @@ h1, .bracket {
 }
 
 h1, h2, h3 {
-  font-family: 'Garamond', 'Georgia', serif;
+  font-family: 'Garamond', 'Telex', serif;
   font-weight: normal;
   margin: 15px 0 5px 0;
   
@@ -183,6 +183,10 @@ body.terminal .nav li a {
 
 body.terminal .nav li a:hover {
   background-color: hsl(211, 49%, 63%);
+}
+
+body.terminal pre {
+  border-radius: 15px;
 }
 
 
