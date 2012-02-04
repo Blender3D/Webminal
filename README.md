@@ -11,7 +11,7 @@ You'll need to setup a proper uwsgi handler and proxy for your webserver.
 You'll need `mod_uwsgi` enabled for this configuration to work:
 
     <Location /terminal/proxy/>
-      ProxyPass  http://localhost:4200/
+      ProxyPass  http://localhost:4200/index/
       Order      allow,deny
       Allow      from all
     </Location>
@@ -27,7 +27,7 @@ nginx already has uwsgi support:
 
     location /terminal/proxy {
       rewrite           ^/terminal/proxy/(.*)$ /$1 break;
-      proxy_pass        http://localhost:4200;
+      proxy_pass        http://localhost:4200/index;
       proxy_set_header  X-Real-IP $remote_addr;
     }
     
@@ -52,6 +52,7 @@ Then start [ShellInABox](http://code.google.com/p/shellinabox/) (from the source
         -f ShellInABox.js:static/shellinabox/script.js \
         -f root_page.html:static/shellinabox/index.html \
         -f keyboard-layout.html:static/shellinabox/keyboard.html \
+        -f index/:static/shellinabox/index.html \
         --localhost-only -d
 
 Enjoy ;)
