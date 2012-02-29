@@ -89,15 +89,14 @@ class User(db.Model):
     self.username = username
     self.password = password
     self.verify_key = base64.urlsafe_b64encode(os.urandom(12))
-    self.verified = False
     self.joined_on = datetime.now()
     self.num_logins = 0
+    
+    self.verified = False
     self.activated = False
     
   def create_account(self):
-    print ' * Creating user "{username}".'.format(username=self.username)
     # ADD USER CREATION CODE HERE
-    print self.password
     self.set_password(self.password)
   
   def set_password(self, password):
@@ -148,11 +147,10 @@ def login():
         hashlib.sha512(user.email).hexdigest()
       ).hexdigest()
       
-      print password_hash
-
       if not user.activated:
-	        flash('Please Wait for 60 seconds!,Our admin rushing to create an account for you!', category='error')
-	   	return render_template('login.html', form=form)
+        flash('Please try again in a few minutes. Our admin is rushing to create an account for you!', category='error')
+        
+	   	  return render_template('login.html', form=form)
       
       if password_hash == user.password:
         if not user.verified:
