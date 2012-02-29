@@ -39,21 +39,15 @@ nginx already has uwsgi support:
 
 ## Webminal
 
-And run Webminal (from the source directory):
+And run Webminal:
 
-    uwsgi -s 127.0.0.1:1973 -w server:app
+    make uwsgi
 
 ## ShellInABox
 
-Then start [ShellInABox](http://code.google.com/p/shellinabox/) (from the source directory again):
+Then start [ShellInABox](http://code.google.com/p/shellinabox/):
 
-    sudo shellinaboxd -s /:LOGIN --disable-ssl \
-        -f styles.css:static/shellinabox/style.css \
-        -f ShellInABox.js:static/shellinabox/script.js \
-        -f root_page.html:static/shellinabox/index.html \
-        -f keyboard-layout.html:static/shellinabox/keyboard.html \
-        -f index/:static/shellinabox/index.html \
-        --localhost-only -d
+    make siab
 
 Enjoy ;)
 

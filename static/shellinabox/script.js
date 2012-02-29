@@ -1522,10 +1522,20 @@ VT100.prototype.truncateLines = function(width) {
 };
 
 var hasLoggedIn = false;
+var prompt = false;
+var consoleElement = $('#console');
 
 VT100.prototype.putString = function(x, y, text, color, style) {
+  var consoleElementChildren = consoleElement.children();
+  
+  window.console.log(consoleElementChildren.eq(consoleElementChildren.length - 1).text());
+  
   if (text.indexOf('Last login') != -1) {
     hasLoggedIn = true;
+  } else if (consoleElementChildren.eq(consoleElementChildren.length - 1).text().match(/^[A-Za-z0-9]+ [\/|~].*\$/g)) {
+    prompt = true;
+    
+    window.console.log('PROMPT');
   }
   
   if (!color) {
@@ -4495,6 +4505,10 @@ ShellInABox.prototype.sendKeys = function(keys) {
       if (keys == '7F') {
         currentString = currentString.substring(0, currentString.length - 1);
       } else if (keys == '0D') {
+        runningCommand = true;
+        prompt = false;
+        lastIndex = $('#console').children().length - 1;
+        
         if (window.parent.last_command) {
           window.parent.last_command(currentString);
         }

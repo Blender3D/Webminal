@@ -1,4 +1,5 @@
-import os, re, hashlib, base64, httplib, time
+import os, re, hashlib, base64, time
+from datetime import datetime
 
 from flask import Flask, url_for, render_template, render_template_string, safe_join, request, flash, redirect, session
 
@@ -10,7 +11,7 @@ from wtforms import Form, TextField, PasswordField, BooleanField, validators
 
 app = Flask(__name__.split('.')[0])
 app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d]\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f' # REPLACE ME WHEN RELEASING
-app.debug = True
+app.debug = False
 
 app.config['FLATPAGES_ROOT'] = 'templates/help'
 app.config['FLATPAGES_EXTENSION'] = '.md'
@@ -23,9 +24,21 @@ app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = ''
 app.config['MAIL_PASSWORD'] = ''
 
+app.config['USE_MYSQL'] = True
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USERNAME'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'loremipsu'
+app.config['MYSQL_DATABASE'] = 'Webminal'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{path}/database.db'.format(path=os.getcwd())
-
+if app.config['USE_MYSQL']:
+  app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://{username}:{password}@{host}/{database}'.format(
+    username=app.config['MYSQL_USERNAME'],
+    password=app.config['MYSQL_PASSWORD'],
+    host=app.config['MYSQL_HOST'],
+    database=app.config['MYSQL_DATABASE']
+  )
+else:
+  app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{path}/database.db'.format(path=os.getcwd())
 
 mail = Mail(app)
 pages = FlatPages(app)
@@ -78,6 +91,8 @@ class User(db.Model):
   password = db.Column(db.String(120))
   verify_key = db.Column(db.String(12), unique=True)
   verified = db.Column(db.Boolean)
+  num_logins = db.Column(db.Integer)
+  joined_on = db.Column(db.DateTime)
 
   def __init__(self, username, email, password):
     self.email = email
@@ -85,6 +100,8 @@ class User(db.Model):
     self.password = password
     self.verify_key = base64.urlsafe_b64encode(os.urandom(12))
     self.verified = False
+    self.joined_on = datetime.now()
+    self.num_logins = 0
     
   def create_account(self):
     print ' * Creating user "{username}".'.format(username=self.username)
@@ -185,7 +202,6 @@ def register():
     user = User(form.username.data, form.email.data, form.password.data)
     
     db.session.add(user)
-    user.create_account()
     db.session.commit()
     
     message = Message('Webminal Account Verification')
@@ -232,6 +248,7 @@ def verify(verify_key):
   
   if user:
     user.verified = True
+    user.create_account()
     db.session.commit()  
     
     flash('Your account has been verified')
