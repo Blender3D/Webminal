@@ -82,6 +82,7 @@ class User(db.Model):
   verified = db.Column(db.Boolean)
   num_logins = db.Column(db.Integer)
   joined_on = db.Column(db.DateTime)
+  activated = db.Column(db.Boolean)
 
   def __init__(self, username, email, password):
     self.email = email
@@ -91,6 +92,7 @@ class User(db.Model):
     self.verified = False
     self.joined_on = datetime.now()
     self.num_logins = 0
+    self.activated = False
     
   def create_account(self):
     print ' * Creating user "{username}".'.format(username=self.username)
@@ -147,6 +149,10 @@ def login():
       ).hexdigest()
       
       print password_hash
+
+      if not user.activated:
+	        flash('Please Wait for 60 seconds!,Our admin rushing to create an account for you!', category='error')
+	   	return render_template('login.html', form=form)
       
       if password_hash == user.password:
         if not user.verified:
