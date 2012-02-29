@@ -10,25 +10,14 @@ from flaskext.flatpages import FlatPages, pygments_style_defs, pygmented_markdow
 from wtforms import Form, TextField, PasswordField, BooleanField, validators
 
 app = Flask(__name__.split('.')[0])
-app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d]\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f' # REPLACE ME WHEN RELEASING
-app.debug = False
 
-app.config['FLATPAGES_ROOT'] = 'templates/help'
-app.config['FLATPAGES_EXTENSION'] = '.md'
-app.config['FLATPAGES_AUTO_RELOAD'] = True
+app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d[\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f'
+app.debug = True
 
-app.config['MAIL'] = False
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_SERVER'] = ''
-app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = ''
-app.config['MAIL_PASSWORD'] = ''
-
-app.config['USE_MYSQL'] = True
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USERNAME'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'loremipsu'
-app.config['MYSQL_DATABASE'] = 'Webminal'
+if os.path.isfile('config.py'):
+  app.config.from_pyfile('config.py')
+else:
+  app.config.from_pyfile('config_default.py')
 
 if app.config['USE_MYSQL']:
   app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://{username}:{password}@{host}/{database}'.format(
@@ -88,7 +77,7 @@ class User(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   username = db.Column(db.String(80), unique=True)
   email = db.Column(db.String(120), unique=True)
-  password = db.Column(db.String(120))
+  password = db.Column(db.String(128))
   verify_key = db.Column(db.String(12), unique=True)
   verified = db.Column(db.Boolean)
   num_logins = db.Column(db.Integer)
@@ -106,6 +95,7 @@ class User(db.Model):
   def create_account(self):
     print ' * Creating user "{username}".'.format(username=self.username)
     # ADD USER CREATION CODE HERE
+    print self.password
     self.set_password(self.password)
   
   def set_password(self, password):
@@ -146,13 +136,17 @@ def login():
   
   if request.method == 'POST' and form.validate():
     user = User.query.filter_by(username=form.username.data).first()
-
+    
+    print user.password
+    
     if user:
       password_hash = hashlib.sha512(
         hashlib.sha512(user.username).hexdigest() + 
         hashlib.sha512(form.password.data).hexdigest() + 
         hashlib.sha512(user.email).hexdigest()
       ).hexdigest()
+      
+      print password_hash
       
       if password_hash == user.password:
         if not user.verified:
@@ -254,7 +248,9 @@ def verify(verify_key):
     flash('Your account has been verified')
     
     return redirect(url_for('login'))
-  return render_template('index.html')
+  
+  flash('Invalid verify key', category='error')
+  return redirect(url_for('index'))
 
 
 
