@@ -138,19 +138,12 @@ def login():
   if request.method == 'POST' and form.validate():
     user = User.query.filter_by(username=form.username.data).first()
     
-    print user.password
-    
     if user:
       password_hash = hashlib.sha512(
         hashlib.sha512(user.username).hexdigest() + 
         hashlib.sha512(form.password.data).hexdigest() + 
         hashlib.sha512(user.email).hexdigest()
       ).hexdigest()
-      
-      if not user.activated:
-        flash('Please try again in a few minutes. Our admin is rushing to create an account for you!', category='error')
-        
-	   	  return render_template('login.html', form=form)
       
       if password_hash == user.password:
         if not user.verified:
@@ -160,9 +153,13 @@ def login():
           
           return render_template('login.html', form=form)
         
-        session['user'] = user
+        if not user.activated:
+          flash('Please try again in a few minutes. Our admin is rushing to create an account for you!', category='error')
+          
+          return render_template('login.html', form=form)
         
         flash('You have been logged in')
+        session['user'] = user
         
         return redirect(url_for('index'))
     
