@@ -72,28 +72,54 @@ class ResetForm(Form):
   confirm = PasswordField('Repeat Password')
 
 
+class LoginHistory(db.Model):
+  __tablename__ = 'LoginHistory'
+  uid = db.Column(db.Integer,primary_key=True)
+  loginAt = db.Column(db.DateTime)
+  userID = db.Column(db.Integer)
+
+  def __init__(self,userID):
+#   self.uid = uid
+    self.loginAt = datetime.now()
+    self.userID = userID
+
+class UserRemap(db.Model):
+  __tablename__ = 'UserRemap'
+  name = db.Column(db.String(40),primary_key=True)
+  email = db.Column(db.String(255))
+  password = db.Column(db.String(64))
+  flag = db.Column(db.String(1))
+
+  def __init__(self, name, email, password):
+    self.email = email
+    self.name = name
+    self.password = password
+    self.flag='N'
+
+#  def __repr__(self):
+#    return '<UserRemap {name}>'.format(name=self.name)
 
 class User(db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  username = db.Column(db.String(80), unique=True)
+  uid = db.Column(db.Integer, primary_key=True)
+  nickname = db.Column(db.String(80), unique=True)
   email = db.Column(db.String(120), unique=True)
   password = db.Column(db.String(128))
   verify_key = db.Column(db.String(12), unique=True)
   verified = db.Column(db.Boolean)
-  num_logins = db.Column(db.Integer)
-  joined_on = db.Column(db.DateTime)
-  activated = db.Column(db.Boolean)
+  logins = db.Column(db.Integer)
+  joinedOn = db.Column(db.DateTime)
+  active = db.Column(db.Boolean)
 
   def __init__(self, username, email, password):
     self.email = email
-    self.username = username
+    self.nickname = username
     self.password = password
     self.verify_key = base64.urlsafe_b64encode(os.urandom(12))
-    self.joined_on = datetime.now()
-    self.num_logins = 0
+    self.joinedOn = datetime.now()
+    self.logins = 0
     
     self.verified = False
-    self.activated = False
+    self.active = False
     
   def create_account(self):
     # ADD USER CREATION CODE HERE
@@ -101,7 +127,7 @@ class User(db.Model):
   
   def set_password(self, password):
     self.password = hashlib.sha512(
-      hashlib.sha512(self.username).hexdigest() + 
+      hashlib.sha512(self.nickname).hexdigest() + 
       hashlib.sha512(password).hexdigest() + 
       hashlib.sha512(self.email).hexdigest()
     ).hexdigest()
@@ -112,7 +138,7 @@ class User(db.Model):
     return self.verify_key
   
   def __repr__(self):
-    return '<User {username}>'.format(username=self.username)
+    return '<User {username}>'.format(username=self.nickname)
 
 
 
@@ -136,11 +162,11 @@ def login():
   form = LoginForm(request.form)
   
   if request.method == 'POST' and form.validate():
-    user = User.query.filter_by(username=form.username.data).first()
+    user = User.query.filter_by(nickname=form.username.data).first()
     
     if user:
       password_hash = hashlib.sha512(
-        hashlib.sha512(user.username).hexdigest() + 
+        hashlib.sha512(user.nickname).hexdigest() + 
         hashlib.sha512(form.password.data).hexdigest() + 
         hashlib.sha512(user.email).hexdigest()
       ).hexdigest()
@@ -153,12 +179,17 @@ def login():
           
           return render_template('login.html', form=form)
         
-        if not user.activated:
+        if not user.active:
           flash('Please try again in a few minutes. Our admin is rushing to create an account for you!', category='error')
           
           return render_template('login.html', form=form)
         
         flash('You have been logged in')
+        user.logins += 1
+	db.session.commit()
+    	loginhistory = LoginHistory(user.uid)
+	db.session.add(loginhistory)
+	db.session.commit()
         session['user'] = user
         
         return redirect(url_for('index'))
@@ -186,7 +217,7 @@ def register():
   form = RegistrationForm(request.form)
   
   if request.method == 'POST' and form.validate():
-    if User.query.filter_by(username=form.username.data).first():
+    if User.query.filter_by(nickname=form.username.data).first():
       flash('This username has already been taken', category='warning')
       return render_template('register.html', form=form)
     
@@ -195,8 +226,12 @@ def register():
       return render_template('register.html', form=form)
     
     user = User(form.username.data, form.email.data, form.password.data)
+    userremap = UserRemap(form.username.data, form.email.data, form.password.data)
     
     db.session.add(user)
+    db.session.commit()
+
+    db.session.add(userremap)
     db.session.commit()
     
     message = Message('Webminal Account Verification')
@@ -218,7 +253,7 @@ def register():
     '''
     
     message.html = message.html.format(
-      username=user.username,
+      username=user.nickname,
       verify_url=url_for('verify', verify_key=user.verify_key)
     )
     
@@ -263,7 +298,7 @@ def forgot():
   form = ResetLoginForm(request.form)
   
   if request.method == 'POST' and form.validate():
-    user = User.query.filter_by(username=form.username.data, email=form.email.data).first()
+    user = User.query.filter_by(nickname=form.username.data, email=form.email.data).first()
     
     if not user:
       flash('The username or email incorrect')
@@ -288,7 +323,7 @@ def forgot():
     '''
     
     message.html = message.html.format(
-      username=user.username,
+      username=user.nickname,
       reset_url=url_for('reset', verify_key=user.generate_verify_key())
     )
     
@@ -314,7 +349,7 @@ def reset(verify_key):
   form = ResetForm(request.form)
   
   if request.method == 'POST' and form.validate():
-    user = User.query.filter_by(username=form.username.data, email=form.email.data, verify_key=verify_key).first()
+    user = User.query.filter_by(nickname=form.username.data, email=form.email.data, verify_key=verify_key).first()
     
     if not user:
       flash('The username or email incorrect')
@@ -322,6 +357,11 @@ def reset(verify_key):
     
     user.generate_verify_key()
     user.set_password(form.password.data)
+    db.session.commit()
+
+    userremap = UserRemap(user.nickname,user.email,form.password.data)
+    userremap.flag='P'
+    db.session.add(userremap)
     db.session.commit()
     
     flash('Your password has been reset')
@@ -358,7 +398,7 @@ def resend(verify_key):
     '''
     
     message.html = message.html.format(
-      username=user.username,
+      username=user.nickname,
       verify_url=url_for('verify', verify_key=user.generate_verify_key())
     )
     
