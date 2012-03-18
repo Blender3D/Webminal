@@ -34,8 +34,8 @@
           
           <ul class="nav">
             <li><a href="{{ url_for('index') }}">Home</a></li>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Contact Us</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+            <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
             
             {% if 'user' not in session %}
               <li><a href="{{ url_for('login') }}">Log In</a></li>

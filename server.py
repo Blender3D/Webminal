@@ -152,7 +152,13 @@ def index():
 def page_not_found(error):
   return render_template('404.html'), 404
 
+@app.route('/about/')
+def about():
+  return render_template('about.html')
 
+@app.route('/contact/')
+def contact():
+  return render_template('contact.html')
 
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
