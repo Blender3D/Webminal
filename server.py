@@ -229,7 +229,6 @@ def register():
     userremap = UserRemap(form.username.data, form.email.data, form.password.data)
     
     db.session.add(user)
-    db.session.commit()
 
     db.session.add(userremap)
     db.session.commit()
@@ -357,7 +356,6 @@ def reset(verify_key):
     
     user.generate_verify_key()
     user.set_password(form.password.data)
-    db.session.commit()
 
     userremap = UserRemap(user.nickname,user.email,form.password.data)
     userremap.flag='P'
