@@ -20,6 +20,8 @@ $(function() {
 });
 
 function last_command(command) {
+  alert(command);
+  
   if (command != '') {
     var url = '/help/' + command.split(' ')[0] + '/plain/';
     $('#overlay').show();
