@@ -1528,14 +1528,10 @@ var consoleElement = $('#console');
 VT100.prototype.putString = function(x, y, text, color, style) {
   var consoleElementChildren = consoleElement.children();
   
-  window.console.log(consoleElementChildren.eq(consoleElementChildren.length - 1).text());
-  
   if (text.indexOf('Last login') != -1) {
     hasLoggedIn = true;
   } else if (consoleElementChildren.eq(consoleElementChildren.length - 1).text().match(/^[A-Za-z0-9]+ [\/|~].*\$/g)) {
     prompt = true;
-    
-    window.console.log('PROMPT');
   }
   
   if (!color) {
@@ -4482,6 +4478,8 @@ ShellInABox.prototype.onReadyStateChange = function(request) {
 var currentString = '';
 
 ShellInABox.prototype.sendKeys = function(keys) {
+  sleep(200);
+  
   if (!this.connected) {
     return;
   }
@@ -4502,24 +4500,21 @@ ShellInABox.prototype.sendKeys = function(keys) {
                                  '&keys=' + encodeURIComponent(keys);
     
     if (hasLoggedIn) {
-      if (keys == '7F') {
-        currentString = currentString.substring(0, currentString.length - 1);
-      } else if (keys == '0D') {
+      test = keys.match(/.{1,2}/g);
+      
+      if (test[test.length - 1] == '0D') {
         runningCommand = true;
         prompt = false;
-        lastIndex = $('#console').children().length - 1;
+
+        var lastLine = $('#console').children().last().children().filter(function() {
+          return $.trim($(this).text()) !== ''
+        });
         
         if (window.parent.last_command) {
-          window.parent.last_command(currentString);
+          window.parent.last_command($.trim(lastLine.last().text()));
         }
         
         currentString = '';
-      } else {
-        var charCode = String.fromCharCode(parseInt(keys, 16));
-        
-        if (charCode) {
-          currentString += charCode;
-        }
       }
     }
     
@@ -4543,6 +4538,11 @@ ShellInABox.prototype.keyPressReadyStateChange = function(request) {
     }
   }
 };
+
+function sleep(milliSeconds){
+	var startTime = new Date().getTime(); // get the current time
+	while (new Date().getTime() < startTime + milliSeconds); // hog cpu
+}
 
 ShellInABox.prototype.keysPressed = function(ch) {
   var hex = '0123456789ABCDEF';
