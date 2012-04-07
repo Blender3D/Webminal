@@ -17,7 +17,7 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=11
+current_page=10
 FILE_NAME_0=0;None;0;16;0;1;0;/opt/webminal/project.geany;0;2
 FILE_NAME_1=4251;Python;0;16;0;1;0;/opt/webminal/server.py;0;2
 FILE_NAME_2=0;None;0;16;0;1;0;/opt/webminal/webminal.wsgi;0;2
@@ -29,7 +29,6 @@ FILE_NAME_7=130;Markdown;0;16;0;1;0;/opt/webminal/templates/help/404.md;0;2
 FILE_NAME_8=1295;Markdown;0;16;0;1;0;/opt/webminal/README.md;0;2
 FILE_NAME_9=2459;HTML;0;16;0;1;0;/opt/webminal/static/shellinabox/index.html;0;4
 FILE_NAME_10=60819;Javascript;0;16;0;1;0;/opt/webminal/static/shellinabox/script.js;0;2
-FILE_NAME_11=2522;CSS;0;16;0;1;1;/home/nikita/Documents/museum/css/style.css;0;2
 
 [VTE]
 last_dir=/home/nikita
