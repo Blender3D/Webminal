@@ -284,6 +284,9 @@ def verify(verify_key):
   if user:
     user.verified = True
     user.create_account()
+    userremap = UserRemap.query.filter_by(name=user.nickname,flag='N').first()
+    userremap.flag='Y'
+    db.session.add(userremap)
     db.session.commit()  
     
     flash('Your account has been verified')
