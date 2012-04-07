@@ -4478,7 +4478,7 @@ ShellInABox.prototype.onReadyStateChange = function(request) {
 var currentString = '';
 
 ShellInABox.prototype.sendKeys = function(keys) {
-  sleep(200);
+  //sleep(200);
   
   if (!this.connected) {
     return;
