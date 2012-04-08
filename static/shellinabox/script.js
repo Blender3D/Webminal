@@ -4511,7 +4511,9 @@ ShellInABox.prototype.sendKeys = function(keys) {
         });
         
         if (window.parent.last_command) {
-          window.parent.last_command($.trim(lastLine.last().text()));
+          var command = $.trim(lastLine.text()).replace(/^.*?\$\]?\s*/, '', '');
+          alert(command);
+          window.parent.last_command(command);
         }
         
         currentString = '';
