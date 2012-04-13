@@ -154,7 +154,7 @@ body {
 #vt100 .ansi12              { color:            #729FCF; }
 #vt100 .ansi13              { color:            #729fcf; }
 #vt100 .ansi14              { color:            #ad7fa8; }
-#vt100 .ansi15              { color:            #323232; }
+#vt100 .ansi15              { color:            rgb(238, 238, 238); }
 
 #vt100 .bgAnsi0             { background-color: #FFFFFF; }
 #vt100 .bgAnsi1             { background-color: #cd0000; }

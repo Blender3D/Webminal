@@ -3,6 +3,16 @@
 {% block title %}Register{% endblock title %}
 
 {% block body %}
+  <h2>Register</h2>
+  
+  <p>
+    Registering for a Webminal account is very easy. Before you can use your account, however, our server must process your registration request and create all of your account resources, which may take a few minutes.
+  </p>
+  
+  <p>
+    It is advised to wait for about 10 minutes before trying to login to the Terminal.
+  </p>
+  
   {% from "_formhelpers.html" import render_field %}
   <form method="post" action="{{ url_for('register') }}">
     {{ render_field(form.username) }}
@@ -11,7 +21,12 @@
     {{ render_field(form.confirm) }}
     {{ render_field(form.accept_tos) }}
     
-    <input class="btn primary" type="submit" value="Register">
+    <div class="clearfix">
+      <label for="submit"></label>
+      <div class="input">
+        <input type="submit" name="submit" class="btn" value="Register" />
+      </div>
+    </div>
   </form>
 {% endblock body %}
 

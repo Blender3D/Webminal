@@ -1,48 +1,3 @@
-// ShellInABox.js -- Use XMLHttpRequest to provide an AJAX terminal emulator.
-// Copyright (C) 2008-2010 Markus Gutschke <markus@shellinabox.com>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License version 2 as
-// published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, write to the Free Software Foundation, Inc.,
-// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-//
-// In addition to these license terms, the author grants the following
-// additional rights:
-//
-// If you modify this program, or any covered work, by linking or
-// combining it with the OpenSSL project's OpenSSL library (or a
-// modified version of that library), containing parts covered by the
-// terms of the OpenSSL or SSLeay licenses, the author
-// grants you additional permission to convey the resulting work.
-// Corresponding Source for a non-source form of such a combination
-// shall include the source code for the parts of OpenSSL used as well
-// as that of the covered work.
-//
-// You may at your option choose to remove this additional permission from
-// the work, or from any part of it.
-//
-// It is possible to build this program in a way that it loads OpenSSL
-// libraries at run-time. If doing so, the following notices are required
-// by the OpenSSL and SSLeay licenses:
-//
-// This product includes software developed by the OpenSSL Project
-// for use in the OpenSSL Toolkit. (http://www.openssl.org/)
-//
-// This product includes cryptographic software written by Eric Young
-// (eay@cryptsoft.com)
-//
-//
-// The most up-to-date version of this program is always available from
-// http://shellinabox.com
-
 // VT100.js -- JavaScript based terminal emulator
 // Copyright (C) 2008-2010 Markus Gutschke <markus@shellinabox.com>
 //
@@ -125,7 +80,7 @@
 // #define ESignore       14
 // #define ESnonstd       15
 // #define ESpalette      16
-// #define ESstatus       17
+// #define EStitle        17
 // #define ESss2          18
 // #define ESss3          19
 
@@ -146,7 +101,7 @@ function VT100(container) {
   } else {
     this.urlRE            = new RegExp(
     // Known URL protocol are "http", "https", and "ftp".
-    '(?:http|https|ftp|sftp|ssh)://' +
+    '(?:http|https|ftp)://' +
 
     // Optionally allow username and passwords.
     '(?:[^:@/ \u00A0]*(?::[^@/ \u00A0]*)?@)?' +
@@ -232,7 +187,7 @@ function VT100(container) {
                               this.CodePage437Map, this.DirectToFontMap ];
   this.savedValid         = [ ];
   this.respondString      = '';
-  this.statusString       = '';
+  this.titleString        = '';
   this.internalClipboard  = undefined;
   this.reset(true);
 }
@@ -328,6 +283,7 @@ VT100.prototype.getUserSettings = function() {
   this.visualBell           = typeof suppressAllAudio != 'undefined' &&
                               suppressAllAudio;
   this.autoprint            = true;
+  this.softKeyboard         = false;
   this.blinkingCursor       = true;
   if (this.visualBell) {
     this.signature          = Math.floor(16807*this.signature + 1) %
@@ -358,6 +314,7 @@ VT100.prototype.getUserSettings = function() {
       this.utfPreferred     = settings.charAt(0) != '0';
       this.visualBell       = settings.charAt(1) != '0';
       this.autoprint        = settings.charAt(2) != '0';
+      this.softKeyboard     = settings.charAt(3) != '0';
       this.blinkingCursor   = settings.charAt(4) != '0';
       if (typeof userCSSList != 'undefined') {
         for (var i = 0; i < userCSSList.length; ++i) {
@@ -374,6 +331,7 @@ VT100.prototype.storeUserSettings = function() {
                   (this.utfEnabled     ? '1' : '0') +
                   (this.visualBell     ? '1' : '0') +
                   (this.autoprint      ? '1' : '0') +
+                  (this.softKeyboard   ? '1' : '0') +
                   (this.blinkingCursor ? '1' : '0');
   if (typeof userCSSList != 'undefined') {
     for (var i = 0; i < userCSSList.length; ++i) {
@@ -383,6 +341,133 @@ VT100.prototype.storeUserSettings = function() {
   var d         = new Date();
   d.setDate(d.getDate() + 3653);
   document.cookie = settings + ';expires=' + d.toGMTString();
+};
+
+VT100.prototype.initializeUserCSSStyles = function() {
+  this.usercssActions                    = [];
+  if (typeof userCSSList != 'undefined') {
+    var menu                             = '';
+    var group                            = '';
+    var wasSingleSel                     = 1;
+    var beginOfGroup                     = 0;
+    for (var i = 0; i <= userCSSList.length; ++i) {
+      if (i < userCSSList.length) {
+        var label                        = userCSSList[i][0];
+        var newGroup                     = userCSSList[i][1];
+        var enabled                      = userCSSList[i][2];
+      
+        // Add user style sheet to document
+        var style                        = document.createElement('link');
+        var id                           = document.createAttribute('id');
+        id.nodeValue                     = 'usercss-' + i;
+        style.setAttributeNode(id);
+        var rel                          = document.createAttribute('rel');
+        rel.nodeValue                    = 'stylesheet';
+        style.setAttributeNode(rel);
+        var href                         = document.createAttribute('href');
+        href.nodeValue                   = 'usercss-' + i + '.css';
+        style.setAttributeNode(href);
+        var type                         = document.createAttribute('type');
+        type.nodeValue                   = 'text/css';
+        style.setAttributeNode(type);
+        document.getElementsByTagName('head')[0].appendChild(style);
+        style.disabled                   = !enabled;
+      }
+    
+      // Add entry to menu
+      if (newGroup || i == userCSSList.length) {
+        if (beginOfGroup != 0 && (i - beginOfGroup > 1 || !wasSingleSel)) {
+          // The last group had multiple entries that are mutually exclusive;
+          // or the previous to last group did. In either case, we need to
+          // append a "<hr />" before we can add the last group to the menu.
+          menu                          += '<hr />';
+        }
+        wasSingleSel                     = i - beginOfGroup < 1;
+        menu                            += group;
+        group                            = '';
+
+        for (var j = beginOfGroup; j < i; ++j) {
+          this.usercssActions[this.usercssActions.length] =
+            function(vt100, current, begin, count) {
+
+              // Deselect all other entries in the group, then either select
+              // (for multiple entries in group) or toggle (for on/off entry)
+              // the current entry.
+              return function() {
+                var entry                = vt100.getChildById(vt100.menu,
+                                                              'beginusercss');
+                var i                    = -1;
+                var j                    = -1;
+                for (var c = count; c > 0; ++j) {
+                  if (entry.tagName == 'LI') {
+                    if (++i >= begin) {
+                      --c;
+                      var label          = vt100.usercss.childNodes[j];
+
+                      // Restore label to just the text content
+                      if (typeof label.textContent == 'undefined') {
+                        var s            = label.innerText;
+                        label.innerHTML  = '';
+                        label.appendChild(document.createTextNode(s));
+                      } else {
+                        label.textContent= label.textContent;
+                      }
+
+                      // User style sheets are numbered sequentially
+                      var sheet          = document.getElementById(
+                                                               'usercss-' + i);
+                      if (i == current) {
+                        if (count == 1) {
+                          sheet.disabled = !sheet.disabled;
+                        } else {
+                          sheet.disabled = false;
+                        }
+                        if (!sheet.disabled) {
+                          label.innerHTML= '<img src="enabled.gif" />' +
+                                           label.innerHTML;
+                        }
+                      } else {
+                        sheet.disabled   = true;
+                      }
+                      userCSSList[i][2]  = !sheet.disabled;
+                    }
+                  }
+                  entry                  = entry.nextSibling;
+                }
+
+                // If the font size changed, adjust cursor and line dimensions
+                this.cursor.style.cssText= '';
+                this.cursorWidth         = this.cursor.clientWidth;
+                this.cursorHeight        = this.lineheight.clientHeight;
+                for (i = 0; i < this.console.length; ++i) {
+                  for (var line = this.console[i].firstChild; line;
+                       line = line.nextSibling) {
+                    line.style.height    = this.cursorHeight + 'px';
+                  }
+                }
+                vt100.resizer();
+              };
+            }(this, j, beginOfGroup, i - beginOfGroup);
+        }
+
+        if (i == userCSSList.length) {
+          break;
+        }
+
+        beginOfGroup                     = i;
+      }
+      // Collect all entries in a group, before attaching them to the menu.
+      // This is necessary as we don't know whether this is a group of
+      // mutually exclusive options (which should be separated by "<hr />" on
+      // both ends), or whether this is a on/off toggle, which can be grouped
+      // together with other on/off options.
+      group                             +=
+        '<li>' + (enabled ? '<img src="enabled.gif" />' : '') +
+                 label +
+        '</li>';
+    }
+    this.usercss.innerHTML               = menu;
+  }
 };
 
 VT100.prototype.resetLastSelectedKey = function(e) {
@@ -669,6 +754,11 @@ VT100.prototype.initializeKeyboardButton = function() {
         vt100.input.focus();
       }
       return false; }; }(this));
+
+  // Enable button that displays keyboard
+  if (this.softKeyboard) {
+    this.keyboardImage.style.visibility = 'visible';
+  }
 };
 
 VT100.prototype.initializeKeyboard = function() {
@@ -733,6 +823,7 @@ VT100.prototype.initializeElements = function(container) {
       !this.getChildById(this.container, 'menu')        ||
       !this.getChildById(this.container, 'keyboard')    ||
       !this.getChildById(this.container, 'kbd_button')  ||
+      !this.getChildById(this.container, 'kbd_img')     ||
       !this.getChildById(this.container, 'layout')      ||
       !this.getChildById(this.container, 'scrollable')  ||
       !this.getChildById(this.container, 'console')     ||
@@ -791,12 +882,12 @@ VT100.prototype.initializeElements = function(container) {
                        '<div class="hidden">' +
                          '<div id="usercss"></div>' +
                          '<pre><div><span id="space"></span></div></pre>' +
-                         '<input type="textfield" id="input" />' +
+                         '<input type="textfield" id="input" autocorrect="off" autocapitalize="off" />' +
                          '<input type="textfield" id="cliphelper" />' +
                          (typeof suppressAllAudio != 'undefined' &&
                           suppressAllAudio ? "" :
                          embed + '<bgsound id="beep_bgsound" loop=1 />') +
-                          '<iframe id="layout" src="../keyboard.html" />' +
+                          '<iframe id="layout" src="keyboard.html" />' +
                         '</div>';
   }
 
@@ -821,6 +912,7 @@ VT100.prototype.initializeElements = function(container) {
   this.curSizeBox              = this.getChildById(this.container, 'cursize');
   this.menu                    = this.getChildById(this.container, 'menu');
   this.keyboard                = this.getChildById(this.container, 'keyboard');
+  this.keyboardImage           = this.getChildById(this.container, 'kbd_img');
   this.layout                  = this.getChildById(this.container, 'layout');
   this.scrollable              = this.getChildById(this.container,
                                                                  'scrollable');
@@ -837,6 +929,9 @@ VT100.prototype.initializeElements = function(container) {
   this.input                   = this.getChildById(this.container, 'input');
   this.cliphelper              = this.getChildById(this.container,
                                                                  'cliphelper');
+
+  // Add any user selectable style sheets to the menu
+  this.initializeUserCSSStyles();
 
   // Remember the dimensions of a standard character glyph. We would
   // expect that we could just check cursor.clientWidth/Height at any time,
@@ -947,6 +1042,24 @@ VT100.prototype.initializeElements = function(container) {
   this.addListener(this.scrollable,'mouseup',  mouseEvent(this, 1 /* MOUSE_UP */));
   this.addListener(this.scrollable,'click',    mouseEvent(this, 2 /* MOUSE_CLICK */));
 
+  // Check that browser supports drag and drop
+  if ('draggable' in document.createElement('span')) {
+      var dropEvent            = function (vt100) {
+          return function(e) {
+              if (!e) e = window.event;
+              if (e.preventDefault) e.preventDefault();
+              vt100.keysPressed(e.dataTransfer.getData('Text'));
+              return false;
+          };
+      };
+      // Tell the browser that we *can* drop on this target
+      this.addListener(this.scrollable, 'dragover', cancel);
+      this.addListener(this.scrollable, 'dragenter', cancel);
+
+      // Add a listener for the drop event
+      this.addListener(this.scrollable, 'drop', dropEvent(this));
+  }
+  
   // Initialize the blank terminal window.
   this.currentScreen           = 0;
   this.cursorX                 = 0;
@@ -959,6 +1072,13 @@ VT100.prototype.initializeElements = function(container) {
   this.focusCursor();
   this.input.focus();
 };
+
+function cancel(event) {
+  if (event.preventDefault) {
+    event.preventDefault();
+  }
+  return false;
+}
 
 VT100.prototype.getChildById = function(parent, id) {
   var nodeList = parent.all || parent.getElementsByTagName('*');
@@ -1006,7 +1126,7 @@ VT100.prototype.repairElements = function(console) {
         for (var span = line.firstChild; span; span = span.nextSibling) {
           var newSpan             = document.createElement(span.tagName);
           newSpan.style.cssText   = span.style.cssText;
-          newSpan.style.className = span.style.className;
+          newSpan.className	  = span.className;
           this.setTextContent(newSpan, this.getTextContent(span));
           newLine.appendChild(newSpan);
         }
@@ -1417,7 +1537,7 @@ VT100.prototype.insertBlankLine = function(y, color, style) {
     line                 = document.createElement('div');
     var span             = document.createElement('span');
     span.style.cssText   = style;
-    span.style.className = color;
+    span.className	 = color;
     this.setTextContent(span, this.spaces(this.terminalWidth));
     line.appendChild(span);
   }
@@ -1528,10 +1648,12 @@ var consoleElement = $('#console');
 VT100.prototype.putString = function(x, y, text, color, style) {
   var consoleElementChildren = consoleElement.children();
   
-  if (text.indexOf('Last login') != -1) {
-    hasLoggedIn = true;
-  } else if (consoleElementChildren.eq(consoleElementChildren.length - 1).text().match(/^[A-Za-z0-9]+ [\/|~].*\$/g)) {
-    prompt = true;
+  if (!hasLoggedIn) {
+    if (text.indexOf('Last login') != -1) {
+      hasLoggedIn = true;
+    } else if (consoleElementChildren.eq(consoleElementChildren.length - 1).text().match(/^[A-Za-z0-9]+ [\/|~].*\$/g)) {
+      prompt = true;
+    }
   }
   
   if (!color) {
@@ -2233,6 +2355,13 @@ VT100.prototype.pasteFnc = function() {
   }
 };
 
+VT100.prototype.pasteBrowserFnc = function() {
+  var clipboard     = prompt("Paste into this box:","");
+  if (clipboard != undefined) {
+     return this.keysPressed('' + clipboard);
+  }
+};
+
 VT100.prototype.toggleUTF = function() {
   this.utfEnabled   = !this.utfEnabled;
 
@@ -2243,6 +2372,11 @@ VT100.prototype.toggleUTF = function() {
 
 VT100.prototype.toggleBell = function() {
   this.visualBell = !this.visualBell;
+};
+
+VT100.prototype.toggleSoftKeyboard = function() {
+  this.softKeyboard = !this.softKeyboard;
+  this.keyboardImage.style.visibility = this.softKeyboard ? 'visible' : '';
 };
 
 VT100.prototype.deselectKeys = function(elem) {
@@ -2333,17 +2467,21 @@ VT100.prototype.showContextMenu = function(x, y) {
         '<ul id="menuentries">' +
           '<li id="beginclipboard">Copy</li>' +
           '<li id="endclipboard">Paste</li>' +
+          '<li id="browserclipboard">Paste from browser</li>' +
           '<hr />' +
           '<li id="reset">Reset</li>' +
           '<hr />' +
           '<li id="beginconfig">' +
-             (this.utfEnabled ? '<img src="../enabled.gif" />' : '') +
+             (this.utfEnabled ? '<img src="enabled.gif" />' : '') +
              'Unicode</li>' +
           '<li>' +
-             (this.visualBell ? '<img src="../enabled.gif" />' : '') +
+             (this.visualBell ? '<img src="enabled.gif" />' : '') +
              'Visual Bell</li>'+
+          '<li>' +
+             (this.softKeyboard ? '<img src="enabled.gif" />' : '') +
+             'Onscreen Keyboard</li>' +
           '<li id="endconfig">' +
-             (this.blinkingCursor ? '<img src="../enabled.gif" />' : '') +
+             (this.blinkingCursor ? '<img src="enabled.gif" />' : '') +
              'Blinking Cursor</li>'+
           (this.usercss.firstChild ?
            '<hr id="beginusercss" />' +
@@ -2371,9 +2509,19 @@ VT100.prototype.showContextMenu = function(x, y) {
   }
 
   // Actions for default items
-  var actions                 = [ this.copyLast, p, this.reset,
+  var actions                 = [ this.copyLast, p, this.pasteBrowserFnc, this.reset,
                                   this.toggleUTF, this.toggleBell,
+                                  this.toggleSoftKeyboard,
                                   this.toggleCursorBlinking ];
+
+  // Actions for user CSS styles (if any)
+  for (var i = 0; i < this.usercssActions.length; ++i) {
+    actions[actions.length]   = this.usercssActions[i];
+  }
+  actions[actions.length]     = this.about;
+
+  // Allow subclasses to dynamically add entries to the context menu
+  this.extendContextMenu(menuentries, actions);
 
   // Hook up event listeners
   for (var node = menuentries.firstChild, i = 0; node;
@@ -2605,10 +2753,14 @@ VT100.prototype.handleKey = function(event) {
       case 189: /* -            */ ch = this.applyModifiers(45, event); break;
       case 190: /* .            */ ch = this.applyModifiers(46, event); break;
       case 191: /* /            */ ch = this.applyModifiers(47, event); break;
-      case 192: /* `            */ ch = this.applyModifiers(96, event); break;
-      case 219: /* [            */ ch = this.applyModifiers(91, event); break;
+      // Conflicts with dead key " on Swiss keyboards
+      //case 192: /* `            */ ch = this.applyModifiers(96, event); break;
+      // Conflicts with dead key " on Swiss keyboards
+      //case 219: /* [            */ ch = this.applyModifiers(91, event); break;
       case 220: /* \            */ ch = this.applyModifiers(92, event); break;
-      case 221: /* ]            */ ch = this.applyModifiers(93, event); break;
+      // Conflicts with dead key ^ and ` on Swiss keaboards
+      //                         ^ and " on French keyboards
+      //case 221: /* ]            */ ch = this.applyModifiers(93, event); break;
       case 222: /* '            */ ch = this.applyModifiers(39, event); break;
       default:                                                          return;
       }
@@ -2778,21 +2930,36 @@ VT100.prototype.keyDown = function(event) {
   this.lastKeyDownEvent         = undefined;
   this.lastNormalKeyDownEvent   = event;
 
+  // Swiss keyboard conflicts:
+  // [ 59
+  // ] 192
+  // ' 219 (dead key)
+  // { 220
+  // ~ 221 (dead key)
+  // } 223
+  // French keyoard conflicts:
+  // ~ 50 (dead key)
+  // } 107
   var asciiKey                  =
     event.keyCode ==  32                         ||
     event.keyCode >=  48 && event.keyCode <=  57 ||
     event.keyCode >=  65 && event.keyCode <=  90;
   var alphNumKey                =
     asciiKey                                     ||
+    event.keyCode ==  59 ||
     event.keyCode >=  96 && event.keyCode <= 105 ||
+    event.keyCode == 107 ||
+    event.keyCode == 192 ||
+    event.keyCode >= 219 && event.keyCode <= 221 ||
+    event.keyCode == 223 ||
     event.keyCode == 226;
   var normalKey                 =
     alphNumKey                                   ||
-    event.keyCode ==  59 || event.keyCode ==  61 ||
-    event.keyCode == 106 || event.keyCode == 107 ||
+    event.keyCode ==  61 ||
+    event.keyCode == 106 ||
     event.keyCode >= 109 && event.keyCode <= 111 ||
-    event.keyCode >= 186 && event.keyCode <= 192 ||
-    event.keyCode >= 219 && event.keyCode <= 223 ||
+    event.keyCode >= 186 && event.keyCode <= 191 ||
+    event.keyCode == 222 ||
     event.keyCode == 252;
   try {
     if (navigator.appName == 'Konqueror') {
@@ -2920,10 +3087,14 @@ VT100.prototype.keyUp = function(event) {
       this.catchModifiersEarly    = true;
       var asciiKey                =
         event.keyCode ==  32                         ||
-        event.keyCode >=  48 && event.keyCode <=  57 ||
+        // Conflicts with dead key ~ (code 50) on French keyboards
+        //event.keyCode >=  48 && event.keyCode <=  57 ||
+        event.keyCode >=  48 && event.keyCode <=  49 ||
+        event.keyCode >=  51 && event.keyCode <=  57 ||
         event.keyCode >=  65 && event.keyCode <=  90;
       var alphNumKey              =
         asciiKey                                     ||
+        event.keyCode ==  50                         ||
         event.keyCode >=  96 && event.keyCode <= 105;
       var normalKey               =
         alphNumKey                                   ||
@@ -3155,10 +3326,9 @@ VT100.prototype.respondSecondaryDA = function() {
 
 
 VT100.prototype.updateStyle = function() {
-  
   this.style   = '';
   if (this.attr & 0x0200 /* ATTR_UNDERLINE */) {
-    this.style = 'text-decoration:underline;';
+    this.style = 'text-decoration: underline;';
   }
   var bg       = (this.attr >> 4) & 0xF;
   var fg       =  this.attr       & 0xF;
@@ -3171,30 +3341,11 @@ VT100.prototype.updateStyle = function() {
     fg         = 8; // Dark grey
   } else if (this.attr & 0x0800 /* ATTR_BRIGHT */) {
     fg        |= 8;
+    this.style = 'font-weight: bold;';
   }
-  
   if (this.attr & 0x1000 /* ATTR_BLINK */) {
-    bg        ^= 8;
+    this.style = 'text-decoration: blink;';
   }
-  
-  if (this.attr == 2292 || this.attr == 2290 || this.attr == 2295) {
-    this.style = 'font-weight:bold;';
-  }
-  
-  // Make some readability enhancements. Most notably, disallow identical
-  // background and foreground colors.
-  if (bg == fg) {
-    if ((fg   ^= 8) == 7) {
-      fg       = 8;
-    }
-  }
-  // And disallow bright colors on a light-grey background.
-  if (bg == 7 && fg >= 8) {
-    if ((fg   -= 8) == 7) {
-      fg       = 8;
-    }
-  }
-
   this.color   = 'ansi' + fg + ' bgAnsi' + bg;
 };
 
@@ -3747,7 +3898,7 @@ VT100.prototype.doControl = function(ch) {
   case 0x8F: this.isEsc       = 19 /* ESss3 */;                                  break;
   case 0x9A: this.respondID();                                          break;
   case 0x9B: this.isEsc       = 2 /* ESsquare */;                               break;
-  case 0x07: if (this.isEsc != 17 /* ESstatus */) {
+  case 0x07: if (this.isEsc != 17 /* EStitle */) {
                this.beep();                                             break;
              }
              /* fall thru */
@@ -3786,7 +3937,7 @@ VT100.prototype.doControl = function(ch) {
       switch (ch) {
 /*0*/ case 0x30:
 /*1*/ case 0x31:
-/*2*/ case 0x32: this.statusString = ''; this.isEsc  = 17 /* ESstatus */;        break;
+/*2*/ case 0x32: this.isEsc   = 17 /* EStitle */; this.titleString = '';         break;
 /*P*/ case 0x50: this.npar    = 0; this.par = [ 0, 0, 0, 0, 0, 0, 0 ];
                  this.isEsc   = 16 /* ESpalette */;                              break;
 /*R*/ case 0x52: // Palette support is not implemented
@@ -3982,18 +4133,22 @@ VT100.prototype.doControl = function(ch) {
         this.translate        = this.GMap[g];
       }
       break;
-    case 17 /* ESstatus */:
+    case 17 /* EStitle */:
       if (ch == 0x07) {
-        if (this.statusString && this.statusString.charAt(0) == ';') {
-          this.statusString   = this.statusString.substr(1);
+        if (this.titleString && this.titleString.charAt(0) == ';') {
+          this.titleString    = this.titleString.substr(1);
+          if (this.titleString != '') {
+            this.titleString += ' - ';
+          }
+          this.titleString += 'Shell In A Box'
         }
         try {
-          window.status       = this.statusString;
+          window.document.title = this.titleString;
         } catch (e) {
         }
         this.isEsc            = 0 /* ESnormal */;
       } else {
-        this.statusString    += String.fromCharCode(ch);
+        this.titleString     += String.fromCharCode(ch);
       }
       break;
     case 18 /* ESss2 */:
@@ -4042,7 +4197,6 @@ VT100.prototype.renderString = function(s, showCursor) {
     // call to this.showCursor()
     this.cursor.style.visibility = '';
   }
-  
   this.putString(this.cursorX, this.cursorY, s, this.color, this.style);
 };
 
@@ -4145,9 +4299,6 @@ VT100.prototype.vt100 = function(s) {
   } else if (this.cursorNeedsShowing) {
     this.showCursor();
   }
-  
-  
-  
   return this.respondString;
 };
 
@@ -4305,9 +4456,52 @@ VT100.prototype.ctrlAlways = [
   false, false, false, true,  false, false, false, false
 ];
 
-
-
-
+// ShellInABox.js -- Use XMLHttpRequest to provide an AJAX terminal emulator.
+// Copyright (C) 2008-2010 Markus Gutschke <markus@shellinabox.com>
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 2 as
+// published by the Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// In addition to these license terms, the author grants the following
+// additional rights:
+//
+// If you modify this program, or any covered work, by linking or
+// combining it with the OpenSSL project's OpenSSL library (or a
+// modified version of that library), containing parts covered by the
+// terms of the OpenSSL or SSLeay licenses, the author
+// grants you additional permission to convey the resulting work.
+// Corresponding Source for a non-source form of such a combination
+// shall include the source code for the parts of OpenSSL used as well
+// as that of the covered work.
+//
+// You may at your option choose to remove this additional permission from
+// the work, or from any part of it.
+//
+// It is possible to build this program in a way that it loads OpenSSL
+// libraries at run-time. If doing so, the following notices are required
+// by the OpenSSL and SSLeay licenses:
+//
+// This product includes software developed by the OpenSSL Project
+// for use in the OpenSSL Toolkit. (http://www.openssl.org/)
+//
+// This product includes cryptographic software written by Eric Young
+// (eay@cryptsoft.com)
+//
+//
+// The most up-to-date version of this program is always available from
+// http://shellinabox.com
+//
+//
 // Notes:
 //
 // The author believes that for the purposes of this license, you meet the
@@ -4335,7 +4529,6 @@ VT100.prototype.ctrlAlways = [
 
 // IE does not define XMLHttpRequest by default, so we provide a suitable
 // wrapper.
-
 if (typeof XMLHttpRequest == 'undefined') {
   XMLHttpRequest = function() {
     try { return new ActiveXObject('Msxml2.XMLHTTP.6.0');} catch (e) { }
@@ -4428,7 +4621,7 @@ ShellInABox.prototype.sendRequest = function(request) {
   if (request == undefined) {
     request                  = new XMLHttpRequest();
   }
-  request.open('POST', '../?', true);
+  request.open('POST', this.url + '../?', true);
   request.setRequestHeader('Cache-Control', 'no-cache');
   request.setRequestHeader('Content-Type',
                            'application/x-www-form-urlencoded; charset=utf-8');
@@ -4475,11 +4668,7 @@ ShellInABox.prototype.onReadyStateChange = function(request) {
   }
 };
 
-var currentString = '';
-
 ShellInABox.prototype.sendKeys = function(keys) {
-  //sleep(200);
-  
   if (!this.connected) {
     return;
   }
@@ -4490,7 +4679,7 @@ ShellInABox.prototype.sendKeys = function(keys) {
     keys                       = this.pendingKeys + keys;
     this.pendingKeys           = '';
     var request                = new XMLHttpRequest();
-    request.open('POST', '../?', true);
+    request.open('POST', this.url + '../?', true);
     request.setRequestHeader('Cache-Control', 'no-cache');
     request.setRequestHeader('Content-Type',
                            'application/x-www-form-urlencoded; charset=utf-8');
@@ -4502,7 +4691,7 @@ ShellInABox.prototype.sendKeys = function(keys) {
     if (hasLoggedIn) {
       test = keys.match(/.{1,2}/g);
       
-      if (test[test.length - 1] == '0D') {
+      if (test && (test[test.length - 1] == '0D')) {
         runningCommand = true;
         prompt = false;
 
@@ -4512,7 +4701,6 @@ ShellInABox.prototype.sendKeys = function(keys) {
         
         if (window.parent.last_command) {
           var command = $.trim(lastLine.text()).replace(/^.*?\$\]?\s*/, '', '');
-          alert(command);
           window.parent.last_command(command);
         }
         
@@ -4541,11 +4729,6 @@ ShellInABox.prototype.keyPressReadyStateChange = function(request) {
   }
 };
 
-function sleep(milliSeconds){
-	var startTime = new Date().getTime(); // get the current time
-	while (new Date().getTime() < startTime + milliSeconds); // hog cpu
-}
-
 ShellInABox.prototype.keysPressed = function(ch) {
   var hex = '0123456789ABCDEF';
   var s   = '';
@@ -4561,16 +4744,16 @@ ShellInABox.prototype.keysPressed = function(ch) {
     } else if (c < 0x10000) {
       s += 'E'                                 +
            hex.charAt(       (c >> 12)       ) +
-           hex.charAt(0x8 +  (c >> 10) & 0x3 ) +
+           hex.charAt(0x8 + ((c >> 10) & 0x3)) +
            hex.charAt(       (c >>  6) & 0xF ) +
            hex.charAt(0x8 + ((c >>  4) & 0x3)) +
            hex.charAt(        c        & 0xF );
     } else if (c < 0x110000) {
       s += 'F'                                 +
            hex.charAt(       (c >> 18)       ) +
-           hex.charAt(0x8 +  (c >> 16) & 0x3 ) +
+           hex.charAt(0x8 + ((c >> 16) & 0x3)) +
            hex.charAt(       (c >> 12) & 0xF ) +
-           hex.charAt(0x8 +  (c >> 10) & 0x3 ) +
+           hex.charAt(0x8 + ((c >> 10) & 0x3)) +
            hex.charAt(       (c >>  6) & 0xF ) +
            hex.charAt(0x8 + ((c >>  4) & 0x3)) +
            hex.charAt(        c        & 0xF );

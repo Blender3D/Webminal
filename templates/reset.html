@@ -10,7 +10,12 @@
     {{ render_field(form.password) }}
     {{ render_field(form.confirm) }}
     
-    <input type="submit" class="btn" value="Reset password" />
+    <div class="clearfix">
+      <label for="submit"></label>
+      <div class="input">
+        <input type="submit" name="submit" class="btn" value="Reset password" />
+      </div>
+    </div>
   </form>
 {% endblock body %}
 

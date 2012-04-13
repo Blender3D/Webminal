@@ -3,12 +3,23 @@
 {% block title %}Reset Password{% endblock title %}
 
 {% block body %}
+  <h2>Reset your password</h2>
+  
+  <p>
+    Did you forget your password? If so, please fill in your username and email address so that we can send you a password reset link.
+  </p>
+  
   {% from "_formhelpers.html" import render_field %}
   <form method="post" action="{{ url_for('forgot') }}">
     {{ render_field(form.username) }}
     {{ render_field(form.email) }}
     
-    <input type="submit" class="btn" value="Send reset" />
+    <div class="clearfix">
+      <label for="submit"></label>
+      <div class="input">
+        <input type="submit" name="submit" class="btn" value="Send reset" />
+      </div>
+    </div>
   </form>
 {% endblock body %}
 

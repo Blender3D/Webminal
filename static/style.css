@@ -4,7 +4,7 @@ html, body {
 }
 
 body {
-  font-family: 'Telex', serif;
+  font-family: 'Droid Sans', serif;
   font-size: 17px;
   line-height: 1.4em;
   color: rgb(62, 67, 73);
@@ -19,7 +19,7 @@ h1, .bracket {
 }
 
 h1, h2, h3 {
-  font-family: 'Garamond', 'Telex', serif;
+  font-family: 'Bree Serif', serif;
   font-weight: normal;
   margin: 15px 0 5px 0;
   
@@ -39,18 +39,33 @@ p {
   margin-top: 17px;
 }
 
-pre {
-  padding: 7px 30px;
-  margin: 15px -30px;
-  background: #EEE;
-  
-  line-height: 1.3em;
-  font-family: 'Inconsolata', 'Consolas', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+#terminal {
+  background-color: #323232;
+}
+
+code, pre {
+  font-family: 'Inconsolata', 'Consolas', 'Monaco', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
   font-size: 0.9em;
 }
 
+h1 code {
+  background: none;
+  border: none;
+}
+
 code {
-  font-family: 'Inconsolata', 'Consolas', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+  background: rgb(245, 245, 245);
+  border: 1px solid rgb(215, 215, 215);
+  padding: 3px;
+}
+
+pre {
+  background: #EEE;
+  
+  padding: 7px 30px;
+  margin: 15px -30px;
+  
+  line-height: 1.3em;
 }
 
 header {
@@ -151,8 +166,14 @@ header .nav {
 form .form-error-message {
   display: inline-block;
   color: hsl(0, 49%, 53%);
-
-  font-size: 16px;
+  
+  float: right;
+  text-align: left;
+  
+  min-width: 335px;
+  
+  margin-top: 3px;
+  font-size: 15px;
 }
 
 form .form-error {
@@ -240,10 +261,14 @@ body.terminal pre {
   z-index: 5;
 }
 
-a:hover {
-  color: #00438A;
-  text-decoration: underline;
+a {
+  color: hsl(211, 100%, 27%);
+  text-decoration: none;
+}
 
+a:hover {
+  color: hsl(211, 100%, 37%);
+  text-decoration: underline;
 }
 
 .btn.active,.btn:active {
@@ -294,12 +319,12 @@ button, input[type="submit"] {
 
 
 form .clearfix {
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   zoom: 1;
 }
 
 form .input {
-  margin-left: 150px;
+  margin-left: 170px;
 }
 
 input, textarea {
@@ -313,7 +338,7 @@ input, textarea {
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-input, textarea, select {
+input[type="text"], input[type="password"], textarea, select {
   display: inline-block;
   width: 210px;
   height: 18px;
@@ -327,10 +352,14 @@ input, textarea, select {
   border-radius: 3px;
 }
 
+input[type="checkbox"] {
+  height: 23px;
+}
+
 label {
-  line-height: 18px;
+  margin-top: 3px;
   float: left;
-  width: 130px;
+  width: 150px;
   text-align: right;
 }
 
