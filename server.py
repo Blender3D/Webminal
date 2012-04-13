@@ -439,7 +439,6 @@ def help_command(command):
 
 @app.route('/help/<command>/plain/')
 def help_command_plain(command):
-  time.sleep(1)
   content = pages.get(command)
   
   if not content:
