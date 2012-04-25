@@ -8,6 +8,8 @@ body {
   font-size: 17px;
   line-height: 1.4em;
   color: rgb(62, 67, 73);
+  
+  margin-top: -40px;
 }
 
 h1, .bracket {
