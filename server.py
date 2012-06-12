@@ -6,6 +6,7 @@ from flask import Flask, url_for, render_template, render_template_string, safe_
 from flaskext.sqlalchemy import SQLAlchemy
 from flaskext.mail import Mail, Message
 from flaskext.flatpages import FlatPages, pygments_style_defs, pygmented_markdown
+from flaskext.bcrypt import Bcrypt
 
 from wtforms import Form, TextField, PasswordField, BooleanField, validators
 
@@ -27,6 +28,7 @@ else:
   app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{path}/database.db'.format(path=os.getcwd())
 
 mail = Mail(app)
+bcrypt = Bcrypt(app)
 pages = FlatPages(app)
 db = SQLAlchemy(app)
 
@@ -80,6 +82,8 @@ class LoginHistory(db.Model):
     self.loginAt = datetime.now()
     self.userID = userID
 
+
+
 class UserRemap(db.Model):
   __tablename__ = 'UserRemap'
   name = db.Column(db.String(40),primary_key=True)
@@ -91,10 +95,12 @@ class UserRemap(db.Model):
     self.email = email
     self.name = name
     self.password = password
-    self.flag='N'
+    self.flag = 'N'
 
-#  def __repr__(self):
-#    return '<UserRemap {name}>'.format(name=self.name)
+  def __repr__(self):
+    return '<UserRemap {name}>'.format(name=self.name)
+
+
 
 class User(db.Model):
   uid = db.Column(db.Integer, primary_key=True)
@@ -121,21 +127,12 @@ class User(db.Model):
   def create_account(self):
     # ADD USER CREATION CODE HERE
     self.set_password(self.password)
-  
-  def hash_password(self, password):
-    temp = ''
-
-    for i in range(2**16):
-      temp = hashlib.sha512(
-        hashlib.sha512(temp + self.nickname).hexdigest() + 
-        hashlib.sha512(temp + password).hexdigest() + 
-        hashlib.sha512(temp + self.email).hexdigest()
-      ).hexdigest()
-
-    return temp
 
   def set_password(self, password):
-    self.password = self.hash_password(password)
+    self.password = bcrypt.generate_password_hash(password, rounds=13)
+
+  def verify_password(self, password):
+    return bcrypt.check_password_hash(self.password, password)
   
   def generate_verify_key(self):
     self.verify_key = base64.urlsafe_b64encode(os.urandom(12))
@@ -176,7 +173,7 @@ def login():
     user = User.query.filter_by(nickname=form.username.data).first()
     
     if user:
-      if user.hash_password(form.password.data) == user.password:
+      if user.verify_password(form.password.data):
         if not user.verified:
           flash('Your account has not been verified. Do you want to <a href="{url}">resend the email</a>?'.format(
             url=url_for('resend', verify_key=user.verify_key))
@@ -367,8 +364,8 @@ def reset(verify_key):
     user.generate_verify_key()
     user.set_password(form.password.data)
 
-    userremap = UserRemap(user.nickname,user.email,form.password.data)
-    userremap.flag='P'
+    userremap = UserRemap(user.nickname, user.email, form.password.data)
+    userremap.flag = 'P'
     db.session.add(userremap)
     db.session.commit()
     
