@@ -117,6 +117,7 @@ class User(db.Model):
     self.email = email
     self.nickname = username
     self.password = password
+    self.salt = None
     self.verify_key = base64.urlsafe_b64encode(os.urandom(12))
     self.joinedOn = datetime.now()
     self.logins = 0
@@ -129,10 +130,11 @@ class User(db.Model):
     self.set_password(self.password)
 
   def set_password(self, password):
-    self.password = bcrypt.generate_password_hash(password, rounds=13)
+    self.salt = bcrypt.generate_password_hash(os.urandom(12), rounds=8)
+    self.password = bcrypt.generate_password_hash(self.salt + password, rounds=13)
 
   def verify_password(self, password):
-    return bcrypt.check_password_hash(self.password, password)
+    return bcrypt.check_password_hash(self.password, self.salt + password)
   
   def generate_verify_key(self):
     self.verify_key = base64.urlsafe_b64encode(os.urandom(12))
