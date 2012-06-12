@@ -11,9 +11,6 @@ from wtforms import Form, TextField, PasswordField, BooleanField, validators
 
 app = Flask(__name__.split('.')[0])
 
-app.secret_key = '\x9a\xa7A\xd0\xd2\xa5\x01v\x1d[\xb3\xc32\x9f\xd1nB)m\xc8\xa1\xf0\xf3\x1f'
-app.debug = True
-
 if os.path.isfile('config.py'):
   app.config.from_pyfile('config.py')
 else:
@@ -125,12 +122,20 @@ class User(db.Model):
     # ADD USER CREATION CODE HERE
     self.set_password(self.password)
   
+  def hash_password(self, password):
+    temp = ''
+
+    for i in range(2**16):
+      temp = hashlib.sha512(
+        hashlib.sha512(temp + self.nickname).hexdigest() + 
+        hashlib.sha512(temp + password).hexdigest() + 
+        hashlib.sha512(temp + self.email).hexdigest()
+      ).hexdigest()
+
+    return temp
+
   def set_password(self, password):
-    self.password = hashlib.sha512(
-      hashlib.sha512(self.nickname).hexdigest() + 
-      hashlib.sha512(password).hexdigest() + 
-      hashlib.sha512(self.email).hexdigest()
-    ).hexdigest()
+    self.password = self.hash_password(password)
   
   def generate_verify_key(self):
     self.verify_key = base64.urlsafe_b64encode(os.urandom(12))
@@ -171,13 +176,7 @@ def login():
     user = User.query.filter_by(nickname=form.username.data).first()
     
     if user:
-      password_hash = hashlib.sha512(
-        hashlib.sha512(user.nickname).hexdigest() + 
-        hashlib.sha512(form.password.data).hexdigest() + 
-        hashlib.sha512(user.email).hexdigest()
-      ).hexdigest()
-      
-      if password_hash == user.password:
+      if user.hash_password(form.password.data) == user.password:
         if not user.verified:
           flash('Your account has not been verified. Do you want to <a href="{url}">resend the email</a>?'.format(
             url=url_for('resend', verify_key=user.verify_key))
@@ -191,11 +190,12 @@ def login():
           return render_template('login.html', form=form)
         
         flash('You have been logged in')
+        
         user.logins += 1
-	db.session.commit()
-    	loginhistory = LoginHistory(user.uid)
-	db.session.add(loginhistory)
-	db.session.commit()
+        
+        db.session.add(LoginHistory(user.uid))
+        db.session.commit()
+        
         session['user'] = user
         
         return redirect(url_for('index'))
@@ -235,7 +235,6 @@ def register():
     userremap = UserRemap(form.username.data, form.email.data, form.password.data)
     
     db.session.add(user)
-
     db.session.add(userremap)
     db.session.commit()
     
@@ -284,8 +283,10 @@ def verify(verify_key):
   if user:
     user.verified = True
     user.create_account()
+
     userremap = UserRemap.query.filter_by(name=user.nickname,flag='N').first()
-    userremap.flag='Y'
+    userremap.flag = 'Y'
+
     db.session.add(userremap)
     db.session.commit()  
     
