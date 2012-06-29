@@ -3,10 +3,10 @@ from datetime import datetime
 
 from flask import Flask, url_for, render_template, render_template_string, safe_join, request, flash, redirect, session
 
-from flaskext.sqlalchemy import SQLAlchemy
-from flaskext.mail import Mail, Message
-from flaskext.flatpages import FlatPages, pygments_style_defs, pygmented_markdown
-from flaskext.bcrypt import Bcrypt
+from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.mail import Mail, Message
+from flask.ext.flatpages import FlatPages, pygments_style_defs, pygmented_markdown
+from flask.ext.bcrypt import Bcrypt
 
 from wtforms import Form, TextField, PasswordField, BooleanField, validators
 
@@ -107,7 +107,7 @@ class User(db.Model):
   nickname = db.Column(db.String(80), unique=True)
   email = db.Column(db.String(120), unique=True)
   password = db.Column(db.String(128))
-  verify_key = db.Column(db.String(12), unique=True)
+  verify_key = db.Column(db.String(16), unique=True)
   verified = db.Column(db.Boolean)
   logins = db.Column(db.Integer)
   joinedOn = db.Column(db.DateTime)
