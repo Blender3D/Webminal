@@ -4,33 +4,34 @@
 {% block bodyclass %}terminal{% endblock bodyclass %}
 
 {% block contents %}
-  <div id="terminal">
-    <iframe src="/terminal/proxy/index/" scrolling="no" frameborder="0"></iframe>
-  </div>
-  
-  <div id="side">
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-      <p class="flash-{{ category }}">{{ message|safe }}</p>
-    {% endfor %}
-    
-    <header>
-      <ul class="nav">
-        <li><a href="{{ url_for('index') }}">Home</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="#">Contact Us</a></li>
-        
-        {% if 'user' not in session %}
-          <li><a href="{{ url_for('login') }}">Log In</a></li>
-          <li><a href="{{ url_for('register') }}">Register</a></li>
-        {% else %}
-          <li><a href="{{ url_for('terminal') }}">Terminal</a></li>
-          <li><a href="{{ url_for('logout') }}">Log Out</a></li>
-        {% endif %}
-      </ul>
-    </header>
-    
-    <div id="side-content">
+    <div id="terminal">
+        <iframe src="/terminal/proxy/index/" scrolling="no" frameborder="0"></iframe>
     </div>
-  </div>
+    
+    <div id="side">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+            <p class="flash-{{ category }}">{{ message|safe }}</p>
+        {% endfor %}
+        
+        <header>
+            <ul class="nav">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Contact Us</a></li>
+                
+                {% if 'user' not in session %}
+                    <li><a href="{{ url_for('login') }}">Log In</a></li>
+                    <li><a href="{{ url_for('register') }}">Register</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('terminal') }}">Terminal</a></li>
+                    <li><a href="{{ url_for('logout') }}">Log Out</a></li>
+                {% endif %}
+            </ul>
+        </header>
+        
+        <div id="side-content">
+            
+        </div>
+    </div>
 {% endblock contents %}
 

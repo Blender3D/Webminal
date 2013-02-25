@@ -1,0 +1,67 @@
+{% macro errors(form) %}
+    {% if form.errors %}
+        <fieldset class="errors">
+            {% set multiple = fields|isinstance('list') %}
+            
+            <div class="header">
+                <span class="title">Errors</span>
+                <span class="description">The form has some errors</span>
+            </div>
+        
+            <ul>
+                {% for fieldname, error in form.errors.iteritems() %}
+                    {% with field = form[fieldname] %}
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                {% endfor %}
+            </ul>
+        </fieldset>
+    {% endif %}
+{% endmacro %}
+
+{% macro row(fields, label=false) %}
+    <fieldset>
+        {% set multiple = fields|isinstance('list') %}
+        
+        <div class="header">
+            <span class="title">{{ (fields[0] if multiple else fields).label }}</span>
+            <span class="description">{{ (fields[0] if multiple else fields).description }}</span>
+        </div>
+    
+        <div class="input-wrapper {{ "half" if multiple else "full" }}">
+            {% for field in (fields if multiple else [fields])  %}
+                <div class="input-field">
+                    {{ field(**kwargs) }}
+                    
+                    {% if not field.errors %}
+                        {% if label %}
+                            {{ field.label }}
+                        {% endif %}
+                    {% else %}
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <span class="error">{{ error }}</li>
+                            {% endfor %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </fieldset>
+{% endmacro %}
+
+{% macro messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+                <fieldset class="{{ messages[0][0] }}">
+                    {% for category, message in messages %}
+                        <p class="{{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </fieldset>
+          {% endif %}
+    {% endwith %}
+{% endmacro %}

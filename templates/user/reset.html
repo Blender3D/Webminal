@@ -1,0 +1,17 @@
+{% extends "template.html" %}
+{% set hide_messages = true %}
+
+{% block title %}Forgot your login details?{% endblock %}
+
+{% block content %}
+    <form method="post" class="reset">
+        {{ form.hidden_tag() }}
+        
+        {{ wtf.messages() }}
+        {{ wtf.row(form.username_or_email) }}
+        
+        <div class="buttons">
+            <button name="reset" type="submit">Reset Password</button>
+        </div>
+    </form>
+{% endblock %}

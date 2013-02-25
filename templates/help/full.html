@@ -1,0 +1,11 @@
+{% extends "template.html" %}
+
+{% block title %}Webminal{% endblock title %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='pygments.css') }}" />
+{% endblock head %}
+
+{% block body %}
+    {{ content }}
+{% endblock body %}
