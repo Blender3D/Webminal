@@ -1,0 +1,19 @@
+{% extends "template.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+    <form method="post" name="register_user_form">
+        {{ register_user_form.hidden_tag() }}
+        
+        {{ wtf.row(register_user_form.username, autocomplete="off") }}
+        {{ wtf.row(register_user_form.email, autocomplete="off") }}
+        {{ wtf.row(register_user_form.password, autocomplete="off") }}
+        {{ wtf.row(register_user_form.password_confirm, autocomplete="off") }}
+        
+        <div class="buttons">
+            <button name="next" type="submit">Sign Up</button>
+            <a href="{{ url_for_security('login') }}">Already have an account?</a>
+        </div>
+    </form>
+{% endblock %}

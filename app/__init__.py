@@ -14,7 +14,14 @@ db = SQLAlchemy(app)
 from app.users.models import User, Role
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
-security = Security(app, user_datastore)
+
+from app.users.forms import UsernameRegisterForm
+
+security = Security(
+    app=app,
+    datastore=user_datastore,
+    confirm_register_form=UsernameRegisterForm
+)
 
 @app.route('/')
 def index():
@@ -43,3 +50,7 @@ def gone(error):
 @app.errorhandler(500)
 def internal_server_error(error):
     return render_template('errors/500.html'), 500
+
+@app.template_filter('isinstance')
+def template_isinstance(obj, name):
+    return isinstance(obj, __builtins__[name])

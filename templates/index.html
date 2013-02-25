@@ -1,9 +1,9 @@
-{% extends "layout.html" %}
+{% extends "template.html" %}
 
 {% block title %}Webminal{% endblock title %}
 
-{% block body %}
-  <h2>Welcome to Webminal, the GNU/Linux Online Terminal</h2>
-  
-  {{ lipsum(20) }}
-{% endblock body %}
+{% block content %}
+    <h2>Welcome to Webminal, the GNU/Linux Online Terminal</h2>
+    
+    {{ lipsum(4) }}
+{% endblock content %}

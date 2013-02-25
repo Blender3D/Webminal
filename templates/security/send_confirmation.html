@@ -1,19 +1,17 @@
 {% extends "template.html" %}
 {% set hide_messages = true %}
 
-{% block title %}Log in{% endblock %}
+{% block title %}Resend confirmation instructions{% endblock %}
 
 {% block content %}
-    <form method="post" class="login">
+    <form method="post" class="reset">
         {{ form.hidden_tag() }}
         
         {{ wtf.messages() }}
         {{ wtf.row(form.username_or_email) }}
-        {{ wtf.row(form.password) }}
         
         <div class="buttons">
-            <button name="log_in" type="submit">Log In</button>
-            <a href="{{ url_for('.reset') }}">Forgot your username or password?</a>
+            <button name="reset" type="submit">Reset Password</button>
         </div>
     </form>
 {% endblock %}
