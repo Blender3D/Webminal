@@ -1,15 +1,19 @@
 from flask import Flask, url_for, render_template, render_template_string, safe_join, request, flash, redirect, session
 
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.less import LESS
 from flask.ext.cache import Cache
+from flask.ext.mail import Mail
 from flask.ext.flatpages import FlatPages
 from flask.ext.security import Security, SQLAlchemyUserDatastore, login_required
 
 app = Flask('webminal')
 app.config.from_pyfile('config.py')
 
+less = LESS(app)
 pages = FlatPages(app)
 db = SQLAlchemy(app)
+mail = Mail(app)
 
 from app.users.models import User, Role
 

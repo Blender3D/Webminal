@@ -1,0 +1,410 @@
+@highlight: hsl(211, 49%, 63%);
+@text: hsl(213, 8%, 26%);
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: 'Droid Sans', serif;
+    font-size: 17px;
+    line-height: 1.4em;
+    color: @text;
+    
+    margin-top: -40px;
+}
+
+a {
+    color: darken(@highlight, 10%);
+    text-decoration: none;
+    
+    &:hover {
+        color: lighten(@highlight, 10%);
+        text-decoration: underline;
+    }
+    
+    &:active {
+        position: relative;
+        top: 2px;
+    }
+}
+
+h1 {
+    font-size: 72px;
+}
+
+header {
+    .bracket {
+        font-size: 72px;
+        color: @highlight;
+    }
+}
+
+header {
+    text-align: center;
+    margin-bottom: 60px;
+    
+    .logo {
+        line-height: 100px;
+        height: 100px;
+        
+        margin-bottom: 20px;
+    }
+    
+    h1 {
+        display: inline-block;
+        
+        a {
+            color: @text;
+        }
+        
+        &:hover {
+            color: lighten(@highlight, 10%);
+            
+            .bracket {
+                color: lighten(@highlight, 10%);
+            }
+            
+            a, span {
+                color: lighten(@text, 10%);
+                text-decoration: none;
+            }
+        }
+    }
+    
+    .nav {
+        height: 40px;
+        list-style: none;
+        
+        text-align: center;
+        
+        li {
+            display: inline-block;
+            
+            &:not(:last-child) {
+                margin-right: 8px;
+            }
+            
+            a {
+                color: white;
+                text-decoration: none;
+                background-color: hsl(211, 49%, 43%);
+                
+                padding: 5px;
+                
+                &:hover {
+                    background-color: @highlight;
+                }
+            }
+        }
+    }
+}
+
+section.centered {
+    text-align: center;
+}
+
+.container {
+    width: 740px;
+    margin: 40px auto;
+    
+    text-align: justify;
+}
+
+h1, h2, h3 {
+    font-family: 'Bree Serif', serif;
+    font-weight: normal;
+    margin: 15px 0 5px 0;
+    
+    line-height: 120%;
+}
+
+h2 {
+    font-size: 36px;
+}
+
+h3 {
+    font-size: 30px;
+}
+
+p {
+    margin-bottom: 17px;
+    margin-top: 17px;
+}
+
+#terminal {
+    background-color: #323232;
+}
+
+code, pre {
+    font-family: 'Inconsolata', 'Consolas', 'Monaco', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+    font-size: 0.9em;
+}
+
+h1 code {
+    background: none;
+    border: none;
+}
+
+code {
+    background: rgb(245, 245, 245);
+    border: 1px solid rgb(215, 215, 215);
+    padding: 3px;
+}
+
+pre {
+    background: #EEE;
+    
+    padding: 7px 30px;
+    margin: 15px -30px;
+    
+    line-height: 1.3em;
+}
+
+.notification {
+    position: absolute;
+    
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    height: 70px;
+    
+    line-height: 70px;
+    text-align: center;
+    
+    font-size: 25px;
+    margin: 0px;
+    
+    cursor: pointer;
+    
+    border-bottom: 1px solid transparent;
+    color: white;
+
+    &.flash-message {
+        background-color: lighten(@highlight, 20%);
+        border-color: hsl(211, 49%, 53%);
+    }
+    
+    &.flash-success {
+        background-color: hsl(128, 49%, 73%);
+        border-color: hsl(128, 49%, 53%);
+    }
+    
+    &.flash-warning {
+        background-color: hsl(40, 49%, 73%);
+        border-color: hsl(40, 49%, 53%);
+    }
+    
+    &.flash-error {
+        background-color: hsl(0, 49%, 73%);
+        border-color: hsl(0, 49%, 53%);
+    }
+}
+
+form {
+    .form-error-message {
+        display: inline-block;
+        color: hsl(0, 49%, 53%);
+        
+        float: right;
+        text-align: left;
+        
+        min-width: 335px;
+        
+        margin-top: 3px;
+        font-size: 15px;
+    }
+    
+    .form-error {
+        color: hsl(0, 49%, 53%);
+    }
+    
+    .form-error input {
+        color: hsl(0, 49%, 53%);
+        border-color: hsl(0, 49%, 53%);
+        background-color: hsl(0, 49%, 83%);
+    }
+}
+
+
+body.terminal {
+    padding-left: 750px;
+    
+    h1, .bracket {
+    font-size: 48px;
+    }
+
+    .nav li a {
+        background-color: hsl(211, 49%, 43%);
+        padding: 3px;
+        font-size: 15px;
+    }
+
+    .nav li a:hover {
+        background-color: @highlight;
+    }
+
+    pre {
+        border-radius: 15px;
+    }
+}
+
+#terminal {
+    position: fixed;
+    
+    left: 0px;
+    top: 0px;
+    bottom: 0px;
+    right: 420px;
+    
+    iframe {
+        height: 100%;
+        width: 100%;
+    }
+}
+
+#side {
+    padding: 10px;
+    
+    position: fixed;
+    
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    
+    width: 400px;
+    border-left: 25px solid #323232;
+}
+
+#overlay {
+    position: fixed;
+    
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    
+    width: 440px;
+    
+    background-color: black;
+    
+    background-image: url('/static/spinner.gif');
+    background-position: center center;
+    background-repeat: no-repeat;
+    
+	zoom: 1;
+	filter: alpha(opacity=50);
+	opacity: 0.5;
+    
+    z-index: 5;
+}
+
+.btn.active,.btn:active {
+    -webkit-box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.25),0 1px 2px rgba(0, 0, 0, 0.05);
+    -moz-box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.25),0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.25),0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+
+.btn {
+    cursor: pointer;
+    display: inline-block;
+    background-color: #E6E6E6;
+    background-repeat: no-repeat;
+    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(white), color-stop(25%, white), to(#E6E6E6));
+    background-image: -webkit-linear-gradient(white, white 25%, #E6E6E6);
+    background-image: -moz-linear-gradient(top, white, white 25%, #E6E6E6);
+    background-image: -ms-linear-gradient(white, white 25%, #E6E6E6);
+    background-image: -o-linear-gradient(white, white 25%, #E6E6E6);
+    background-image: linear-gradient(white, white 25%, #E6E6E6);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#e6e6e6', GradientType=0);
+    padding: 5px 14px 6px;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+    color: #333;
+    font-size: 13px;
+    line-height: normal;
+    border: 1px solid #CCC;
+    border-bottom-color: #BBB;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+    -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+    -webkit-transition: 0.1s linear all;
+    -moz-transition: 0.1s linear all;
+    -ms-transition: 0.1s linear all;
+    -o-transition: 0.1s linear all;
+    transition: 0.1s linear all;
+}
+
+
+button, input[type="submit"] {
+    width: auto;
+    height: auto;
+}
+
+form .clearfix {
+    margin-bottom: 12px;
+    zoom: 1;
+}
+
+form .input {
+    margin-left: 170px;
+}
+
+input, textarea {
+    -webkit-transition: border linear 0.2s,box-shadow linear 0.2s;
+    -moz-transition: border linear 0.2s,box-shadow linear 0.2s;
+    -ms-transition: border linear 0.2s,box-shadow linear 0.2s;
+    -o-transition: border linear 0.2s,box-shadow linear 0.2s;
+    transition: border linear 0.2s,box-shadow linear 0.2s;
+    -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    -moz-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+input[type="text"], input[type="password"], textarea, select {
+    display: inline-block;
+    width: 210px;
+    height: 18px;
+    padding: 4px;
+    font-size: 13px;
+    line-height: 18px;
+    color: gray;
+    border: 1px solid #CCC;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
+input[type="checkbox"] {
+    height: 23px;
+}
+
+label {
+    margin-top: 3px;
+    float: left;
+    width: 150px;
+    text-align: right;
+}
+
+::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+    background-color: #525252;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: hsl(211, 49%, 43%);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(211, 49%, 53%);
+}
+::-webkit-scrollbar-corner {
+    display: none;
+}
+
+::-webkit-scrollbar-track {
+    background-color: white;
+}
