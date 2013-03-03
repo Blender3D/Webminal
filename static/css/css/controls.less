@@ -1,0 +1,42 @@
+@import "../colors.less";
+
+input[type="button"], input[type="submit"], button, .button {
+    display: inline-block;
+    
+    font-size: 1.3em;
+    font-weight: bold;
+    
+    border: none;
+    border: 5px solid transparent;
+    
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+    padding-left: 1.1em;
+    padding-right: 1.1em;
+    
+    border-radius: 8px;
+    
+    cursor: pointer;
+    margin: 0.5em;
+}
+
+[type="submit"], .button-primary {
+    color: white;
+    
+    border-color: @highlight;
+    background-color: @highlight;
+    
+    &:hover {
+        background-color: lighten(@highlight, 10%);
+    }
+    
+    &:active {
+        background-color: darken(@highlight, 10%);
+        padding-top: 0.45em;
+        padding-bottom: 0.35em;
+    }
+    
+    &:focus {
+        border-color: lighten(@highlight, 15%);
+    }
+}

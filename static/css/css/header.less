@@ -1,0 +1,67 @@
+@import "../colors.less";
+
+header {
+    text-align: center;
+    margin-bottom: 60px;
+    
+    .logo {
+        margin-top: 40px;
+        margin-bottom: 40px;
+        
+        a {
+            font-size: 200%;
+            color: @text-color;
+            
+            &:hover {
+                color: lighten(@text-color, 15%);
+                border: none;
+                
+                &:before, &:after {
+                    color: lighten(@highlight, 25%);
+                }
+            }
+            
+            &:before, &:after {
+                margin-left: 0.1em;
+                margin-right: 0.1em;
+                
+                color: lighten(@highlight, 20%);
+            }
+            
+            &:before {
+                content: '[';
+            }
+            
+            &:after {
+                content: ']';
+            }
+        }
+    }
+    
+    .nav {
+        padding: 0;
+        height: 40px;
+        list-style: none;
+        
+        text-align: center;
+        
+        li {
+            display: inline-block;
+            
+            a {
+                display: inline-block;
+                background-color: @highlight;
+                color: white;
+                padding: 5px 8px 5px 8px;
+                
+                margin: 2px;
+                
+                &:hover {
+                    background-color: lighten(@highlight, 15%);
+                    color: white;
+                    border-color: transparent;
+                }
+            }
+        }
+    }
+}

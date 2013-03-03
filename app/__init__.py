@@ -10,10 +10,12 @@ from flask.ext.security import Security, SQLAlchemyUserDatastore, login_required
 app = Flask('webminal')
 app.config.from_pyfile('config.py')
 
-less = LESS(app)
 pages = FlatPages(app)
 db = SQLAlchemy(app)
 mail = Mail(app)
+
+if app.debug:
+    less = LESS(app, check_hash=False)
 
 from app.users.models import User, Role
 

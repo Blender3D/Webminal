@@ -1,0 +1,66 @@
+@import "../colors.less";
+
+html, body {
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    background-color: @background-color;
+    background-image: @body-background-image;
+    
+    font-family: 'Droid Sans', serif;
+    font-size: 17px;
+    line-height: 1.4em;
+}
+
+.container {
+    width: 740px;
+    margin: 40px auto;
+    
+    text-align: justify;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Bree Serif', 'Helvetica', 'Arial', sans-serif;
+    color: @text-color;
+    font-weight: normal;
+    
+    font-size: 200%;
+    line-height: 1.3;
+}
+
+* {
+    box-sizing: border-box;
+    outline: none;
+}
+
+a {
+    text-decoration: none;
+    color: darken(@highlight, 15%);
+    
+    padding-bottom: 2px;
+    
+    border-bottom: 1px dashed transparent;
+    
+    &:not(.button) {
+        &:focus, &:hover {
+            color: darken(@highlight, 5%);
+            border-bottom: 1px dashed darken(@highlight, 5%);
+        }
+        
+        &:active {
+            position: relative;
+            
+            top: 2px;
+            
+            color: lighten(@highlight, 6%);
+            border-bottom: 1px dashed lighten(@highlight, 6%);
+        }
+        /*
+        &:visited {
+            color: darken(@highlight, 10%);
+            border-bottom: 1px dashed darken(@highlight, 10%);
+        }*/
+    }
+}

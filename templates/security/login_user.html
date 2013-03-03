@@ -10,7 +10,7 @@
         {{ wtf.messages() }}
         {{ wtf.row(login_user_form.email) }}
         {{ wtf.row(login_user_form.password) }}
-        {{ wtf.row(login_user_form.remember) }}
+        {{ wtf.row(login_user_form.remember, radio=True) }}
         
         <div class="buttons">
             <button name="log_in" type="submit">Log In</button>

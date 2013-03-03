@@ -1,0 +1,144 @@
+@import "../colors.less";
+
+form {
+    position: relative;
+    width: 550px;
+    
+    margin-left: auto;
+    margin-right: auto;
+}
+
+form fieldset {
+    &[class] {
+        margin: 0;
+        
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        
+        border: 1px solid transparent;
+    }
+    
+    &.error {
+        background-color: @light-red;
+        border-color: darken(@light-red, 10%);
+    }
+    
+    &.message {
+        background-color: @light-orange;
+        border-color: darken(@light-orange, 10%);
+    }
+}
+
+form fieldset, form .buttons {
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+    padding-left: 2em;
+    padding-right: 2em; 
+}
+
+form fieldset {
+    margin-top: 0.2em;
+    
+    border: none;
+    
+    &.radio {
+        line-height: 1;
+        
+        .header, .input-wrapper {
+            display: inline-block;
+            margin-bottom: 0;
+            line-height: 1;
+            
+            float: left;
+        }
+        
+        .input-wrapper {
+            width: 20px;
+            margin-right: 7px;
+        }
+    }
+}
+
+form .header {
+    margin-bottom: 0.3em;
+    
+    .title {
+        font-weight: bold;
+    }
+    
+    .description {
+        margin-left: 0.7em;
+        font-size: 0.9em;
+    }
+}
+
+form input {
+    border-radius: 8px;
+       
+    font-size: 1.3em;
+    border: 5px solid @input-border-color;
+    
+    padding: 0.3em;
+    width: 100%;
+    
+    &:focus, &:hover:focus {
+        border-color: lighten(@highlight, 35%);
+    }
+    
+    &:hover {
+        border-color: lighten(@input-border-color, 4%);
+    }
+}
+
+form .input-field {
+    label {
+        font-size: 0.8em;
+        color: lighten(@text-color, 10%);
+    }
+    
+    .error {
+        font-size: 0.8em;
+        color: darken(@red, 20%);
+    }
+}
+
+form .input-wrapper {
+    position: relative;
+    
+    &.full {
+        .input-field {
+            width: 100%;
+        }
+    }
+    
+    &.half {
+        .input-field {
+            width: 48%;
+            
+            &:first-child {
+                float: left;
+            }
+            
+            &:last-child {
+                float: right;
+            }
+        }
+    }
+}
+
+form .buttons {
+    overflow: auto;
+    
+    line-height: 55px;
+    text-align: left;
+    
+    a {
+        margin-left: 1em;
+        margin-right: 1em;
+    }
+    
+    button {
+        float: left;
+        margin: 0;
+    }
+}

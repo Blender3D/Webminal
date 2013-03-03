@@ -23,14 +23,20 @@
     {% endif %}
 {% endmacro %}
 
-{% macro row(fields, label=false) %}
-    <fieldset>
+{% macro row(fields, label=false, radio=False) %}
+    {% if radio %}
+        <fieldset class="radio">
+    {% else %}
+        <fieldset>
+    {% endif %}
         {% set multiple = fields|isinstance('list') %}
         
-        <div class="header">
-            <span class="title">{{ (fields[0] if multiple else fields).label }}</span>
-            <span class="description">{{ (fields[0] if multiple else fields).description }}</span>
-        </div>
+        {% if not radio %}
+            <div class="header">
+                <span class="title">{{ (fields[0] if multiple else fields).label }}</span>
+                <span class="description">{{ (fields[0] if multiple else fields).description }}</span>
+            </div>
+        {% endif %}
     
         <div class="input-wrapper {{ "half" if multiple else "full" }}">
             {% for field in (fields if multiple else [fields])  %}
@@ -51,6 +57,13 @@
                 </div>
             {% endfor %}
         </div>
+        
+        {% if radio %}
+            <div class="header">
+                <span class="title">{{ (fields[0] if multiple else fields).label }}</span>
+                <span class="description">{{ (fields[0] if multiple else fields).description }}</span>
+            </div>
+        {% endif %}
     </fieldset>
 {% endmacro %}
 
