@@ -4,7 +4,7 @@
 {% block title %}Resend confirmation instructions{% endblock %}
 
 {% block content %}
-    <form method="post" action="url_for_security('send_confirmation')">
+    <form method="post" action="{{ url_for_security('send_confirmation') }}">
         {{ send_confirmation_form.hidden_tag() }}
         
         {{ wtf.messages() }}

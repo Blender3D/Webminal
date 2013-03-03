@@ -1,4 +1,5 @@
 {% import "form.html" as wtf %}
+{% set hide_messages = False %}
 
 <!DOCTYPE html>
 
@@ -21,9 +22,11 @@
     <body class="{% block bodyclass %}{% endblock bodyclass %}">
         {% block body %}
             <div class="container">
-                {% for category, message in get_flashed_messages(with_categories=true) %}
-                    <p class="flash-{{ category }}">{{ message|safe }}</p>
-                {% endfor %}
+                {% if not hide_messages %}
+                    {% for category, message in get_flashed_messages(with_categories=true) %}
+                        <p class="flash-{{ category }}">{{ message|safe }}</p>
+                    {% endfor %}
+                {% endif %}
                 
                 <header>
                     <h1 class="logo">
@@ -35,12 +38,12 @@
                         <li><a href="{{ url_for('about') }}">About</a></li>
                         <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
                         
-                        {% if 'user' not in session %}
+                        {% if current_user.is_authenticated() %}
+                            <li><a href="/terminal/">Terminal</a></li>
+                            <li><a href="{{ url_for('security.logout') }}">Log Out</a></li>
+                        {% else %}
                             <li><a href="{{ url_for('security.login') }}">Log In</a></li>
                             <li><a href="{{ url_for('security.register') }}">Register</a></li>
-                        {% else %}
-                            <li><a href="{{ url_for('terminal') }}">Terminal</a></li>
-                            <li><a href="{{ url_for('security.logout') }}">Log Out</a></li>
                         {% endif %}
                     </ul>
                 </header>
