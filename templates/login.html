@@ -1,25 +1,164 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal — Log in</title>
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block title %}Login{% endblock title %}
+  :root {
+    --bg: #ffffff; --bg2: #f9f9f8; --bg3: #f3f3f1;
+    --text: #111111; --muted: #6b7280; --border: rgba(0,0,0,0.1);
+    --green-bg: #eaf3de; --green-txt: #3b6d11;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px; --radius-lg: 12px;
+  }
 
-{% block body %}
-  <h2>Login</h2>
-  
-  <p>
-    Please log in to use Webminal. If you would like to register for a new account, fill out the <a href="{{ url_for('register') }}">registration form</a>.
-  </p>
+  html, body { height: 100%; font-family: var(--font-sans); background: var(--bg2); color: var(--text); -webkit-font-smoothing: antialiased; }
 
-  {% from "_formhelpers.html" import render_field %}
-  <form method="post" action="{{ url_for('login') }}">
-    {{ render_field(form.username) }}
-    {{ render_field(form.password) }}
-    
-    <div class="clearfix">
-      <label for="submit"><a href="{{ url_for('forgot') }}">Forgot your password?</a></label>
-      <div class="input">
-        <input type="submit" name="submit" class="btn" value="Login" />
+  .flash-bar { padding: 10px 24px; font-size: 13px; text-align: center; }
+  .flash-bar.flash-warning { background: #fff3cd; color: #856404; }
+  .flash-bar.flash-error   { background: #f8d7da; color: #721c24; }
+  .flash-bar.flash-info, .flash-bar.flash-message { background: var(--green-bg); color: var(--green-txt); }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; border-bottom: 0.5px solid var(--border);
+    background: var(--bg); position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: var(--radius-md); transition: background 0.15s, color 0.15s; }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links a.active { background: var(--green-bg); color: var(--green-txt); }
+
+  .page { max-width: 420px; margin: 0 auto; padding: 60px 24px 64px; }
+  .page-title { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin-bottom: 6px; text-align: center; }
+  .page-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; text-align: center; }
+  .page-subtitle a { color: var(--green-txt); text-decoration: underline; }
+
+  .card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .form-group input[type="text"],
+  .form-group input[type="password"] {
+    width: 100%; padding: 10px 14px; font-size: 14px;
+    font-family: var(--font-sans); border: 1px solid var(--border);
+    border-radius: var(--radius-md); background: var(--bg); transition: border-color 0.15s;
+  }
+  .form-group input:focus { outline: none; border-color: var(--green-txt); }
+  .form-error-message { font-size: 12px; color: #dc2626; margin-top: 4px; display: block; }
+
+  .hint {
+    font-size: 12px; color: var(--muted); background: var(--bg3);
+    padding: 8px 12px; border-radius: var(--radius-md); margin-bottom: 16px;
+  }
+
+  .btn-submit {
+    width: 100%; padding: 11px; background: var(--green-txt); color: #fff;
+    border: none; border-radius: var(--radius-md); font-family: var(--font-sans);
+    font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-submit:hover { background: #2d5a0c; }
+
+  .form-footer { text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
+  .form-footer a { color: var(--green-txt); text-decoration: underline; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    nav { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+    .nav-links { gap: 2px; flex-wrap: wrap; }
+    .nav-links a { font-size: 12px; padding: 4px 8px; }
+    .nav-hide { display: none; }
+    .page { padding: 36px 16px 48px; }
+    .page-title { font-size: 18px; }
+    .card { padding: 20px 16px; }
+  }
+  @keyframes shine { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+</style>
+</head>
+<body>
+
+{% for category, message in get_flashed_messages(with_categories=true) %}
+  <div class="flash-bar flash-{{ category }}">{{ message|safe }}</div>
+{% endfor %}
+
+<nav>
+  <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+  <div class="nav-links">
+    <a href="{{ url_for('terminal') }}">Terminal</a>
+    <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer">Forum</a>
+    <a href="{{ url_for('faq') }}">FAQ</a>
+    <a href="{{ url_for('contact') }}" class="nav-hide">Team</a>
+    <a href="{{ url_for('about') }}" class="nav-hide">About</a>
+    <a href="{{ url_for('register') }}">Register</a>
+    <a href="{{ url_for('login') }}" class="active">Log in</a>
+  </div>
+</nav>
+
+<!-- LIVE TICKER -->
+<section style="border-bottom: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; height: 32px; background: #0d0f14; display: flex; align-items: center; padding: 0;">
+  <a href="/live/" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #00cc6a; padding: 0 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; text-decoration: none; border-right: 1px solid rgba(255,255,255,0.06); height: 100%;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00cc6a;animation:pulse 2s infinite;"></span>live</a>
+  <div style="flex:1; overflow: hidden; position: relative; height: 100%;">
+    <div id="live-ticker" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b7280; white-space: nowrap; position: absolute; display: flex; gap: 32px; align-items: center; height: 100%; will-change: transform;"></div>
+  </div>
+</section>
+
+<div class="page">
+  <h1 class="page-title">Welcome back</h1>
+  <p class="page-subtitle">Log in to use Webminal, or <a href="{{ url_for('register') }}">create a free account</a> in 2 minutes.</p>
+
+  <div class="card">
+    <form method="post" action="{{ url_for('login') }}">
+      {{ form.csrf_token }}
+
+      <div class="form-group">
+        {{ form.username.label }}
+        {{ form.username(size=20) }}
+        {% for error in form.username.errors %}
+          <span class="form-error-message">{{ error }}</span>
+        {% endfor %}
       </div>
-    </div>
-  </form>
-{% endblock body %}
 
+      <div class="form-group">
+        {{ form.password.label }}
+        {{ form.password(size=20) }}
+        {% for error in form.password.errors %}
+          <span class="form-error-message">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="hint">Both website and terminal passwords are the same and case-sensitive.</div>
+
+      <button type="submit" class="btn-submit">Log in</button>
+    </form>
+  </div>
+
+  <div class="form-footer">
+    <a href="{{ url_for('forgot') }}">Forgot your password?</a>
+  </div>
+  <div style="text-align:center;margin-top:32px;font-size:12px;color:#6b7280;">
+    CI builds failing? <a href="https://neverbreak.ai" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-size:11px;padding:3px 10px;border-radius:6px;background:linear-gradient(135deg,#3b6d11,#00cc6a);color:#fff;text-decoration:none;font-weight:500;position:relative;overflow:hidden;"><span style="position:relative;z-index:1;">NeverBreak.AI</span><span style="position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%);animation:shine 3s infinite;"></span></a> auto-fixes them.
+  </div>
+</div>
+
+<script>
+(function() {
+  var ticker = document.getElementById('live-ticker');
+  if (!ticker) return;
+  function buildTicker(cmds) { ticker.innerHTML = ''; var allCmds = cmds.concat(cmds); for (var i = 0; i < allCmds.length; i++) { var span = document.createElement('span'); span.textContent = allCmds[i]; span.style.color = '#c8d3f5'; ticker.appendChild(span); var dot = document.createElement('span'); dot.textContent = '\u00b7'; dot.style.color = '#6b7280'; dot.style.margin = '0 8px'; ticker.appendChild(dot); } }
+  function startScroll() { var pos = 0, halfWidth = ticker.scrollWidth / 2; if (halfWidth === 0) return; function step() { pos -= 0.5; if (Math.abs(pos) >= halfWidth) pos = 0; ticker.style.transform = 'translateX(' + pos + 'px)'; requestAnimationFrame(step); } step(); }
+  function fetchAndScroll() { var xhr = new XMLHttpRequest(); xhr.open('GET', '/api/live/?t=' + Date.now()); xhr.onload = function() { if (xhr.status === 200 && xhr.responseText.trim()) { var cmds = xhr.responseText.trim().split('\n'); if (cmds.length > 0) { buildTicker(cmds); startScroll(); } } }; xhr.send(); }
+  fetchAndScroll(); setInterval(fetchAndScroll, 15000);
+})();
+</script>
+
+</body>
+</html>

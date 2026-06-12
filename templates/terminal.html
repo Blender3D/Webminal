@@ -1,36 +1,947 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal — Terminal</title>
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block title %}Terminal{% endblock title %}
-{% block bodyclass %}terminal{% endblock bodyclass %}
+  :root {
+    --bg:        #ffffff;
+    --bg2:       #f9f9f8;
+    --bg3:       #f3f3f1;
+    --text:      #111111;
+    --muted:     #6b7280;
+    --border:    rgba(0,0,0,0.1);
+    --green-bg:  #eaf3de;
+    --green-txt: #3b6d11;
+    --green-mid: #97c459;
+    --term-bg:   #0d0f14;
+    --term-bar:  #13161e;
+    --term-brd:  #232838;
+    --term-g:    #00cc6a;
+    --term-w:    #c8d3f5;
+    --term-m:    #6b7280;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
 
-{% block contents %}
-  <div id="terminal">
-    <iframe src="/terminal/proxy/index/" scrolling="no" frameborder="0"></iframe>
-  </div>
-  
-  <div id="side">
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-      <p class="flash-{{ category }}">{{ message|safe }}</p>
-    {% endfor %}
-    
-    <header>
-      <ul class="nav">
-        <li><a href="{{ url_for('index') }}">Home</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="#">Contact Us</a></li>
-        
-        {% if 'user' not in session %}
-          <li><a href="{{ url_for('login') }}">Log In</a></li>
-          <li><a href="{{ url_for('register') }}">Register</a></li>
-        {% else %}
-          <li><a href="{{ url_for('terminal') }}">Terminal</a></li>
-          <li><a href="{{ url_for('logout') }}">Log Out</a></li>
-        {% endif %}
-      </ul>
-    </header>
-    
-    <div id="side-content">
+  html, body {
+    height: 100%;
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  .layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* ── FLASH ── */
+  .flash-bar {
+    padding: 8px 24px;
+    font-size: 12px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .flash-bar.flash-warning { background: #fff3cd; color: #856404; }
+  .flash-bar.flash-error   { background: #f8d7da; color: #721c24; }
+  .flash-bar.flash-info, .flash-bar.flash-message { background: var(--green-bg); color: var(--green-txt); }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 24px;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--bg);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .logo {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: var(--radius-md);
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--green-txt);
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: var(--radius-md);
+    background: var(--green-bg);
+  }
+  .nav-user-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--term-g);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── MAIN SPLIT ── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+  .term-area { flex: 1; min-width: 200px; }
+  .panel { width: 340px; min-width: 200px; max-width: 600px; }
+  .main.panel-collapsed .panel {
+    width: 0 !important; min-width: 0;
+    opacity: 0; pointer-events: none; overflow: hidden;
+  }
+  .main.panel-collapsed .resize-handle { display: none; }
+
+  /* ── RESIZE HANDLE ── */
+  .resize-handle {
+    width: 12px;
+    cursor: col-resize;
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .resize-handle:hover, .resize-handle.dragging {
+    background: var(--green-bg);
+    border-left-color: var(--green-mid);
+    border-right-color: var(--green-mid);
+  }
+  .resize-dots {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .resize-dots span {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: 0.7;
+  }
+  .resize-handle:hover .resize-dots span,
+  .resize-handle.dragging .resize-dots span {
+    background: var(--green-txt);
+    opacity: 1;
+  }
+
+  /* ── TERMINAL SIDE ── */
+  .term-area {
+    background: var(--term-bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 0.5px solid var(--term-brd);
+  }
+  .term-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 16px;
+    background: var(--term-bar);
+    border-bottom: 0.5px solid var(--term-brd);
+    flex-shrink: 0;
+  }
+  .term-dots { display: flex; gap: 7px; align-items: center; }
+  .term-dot {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+  }
+  .term-dot.r { background: #ff5f57; }
+  .term-dot.y { background: #febc2e; }
+  .term-dot.g { background: #28c840; }
+  .term-info {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--term-m);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .term-info-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--term-g);
+    animation: pulse 2s infinite;
+  }
+  .term-actions { display: flex; gap: 6px; }
+  .term-action {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    border: 0.5px solid var(--term-brd);
+    background: transparent;
+    color: var(--term-m);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .term-action:hover { border-color: var(--term-g); color: var(--term-g); }
+  .term-iframe {
+    flex: 1;
+    border: none;
+    width: 100%;
+    height: 100%;
+    background: var(--term-bg);
+  }
+
+  /* ── LESSON PANEL ── */
+  .panel {
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-left: 0.5px solid var(--border);
+    transition: opacity 0.3s ease;
+  }
+  .panel-collapsed .panel {
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    width: 0;
+  }
+
+  /* Panel header */
+  .panel-header {
+    padding: 14px 16px;
+    border-bottom: 0.5px solid var(--border);
+    flex-shrink: 0;
+  }
+  .panel-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .user-avatar {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-md);
+    background: var(--green-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--green-txt);
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .user-info { flex: 1; }
+  .user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .user-status {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--green-txt);
+  }
+  .panel-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .panel-tab {
+    flex: 1;
+    font-size: 11px;
+    padding: 6px 4px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    text-align: center;
+    font-family: var(--font-mono);
+    transition: all 0.15s;
+    letter-spacing: 0.2px;
+  }
+  .panel-tab.active {
+    background: var(--green-bg);
+    border-color: var(--green-mid);
+    color: var(--green-txt);
+    font-weight: 500;
+  }
+  .panel-tab:hover:not(.active) { background: var(--bg3); }
+
+  /* Lesson selector */
+  .panel-selector {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--border);
+    flex-shrink: 0;
+  }
+  .selector-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .selector-select {
+    width: 100%;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text);
+    padding: 7px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+  }
+  .selector-select:focus { border-color: var(--green-mid); }
+
+  /* Tab content areas */
+  .tab-content { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .tab-content.active { display: flex; }
+
+  /* Lesson content */
+  .panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+  .panel-content h1, .panel-content h2, .panel-content h3 {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin: 14px 0 8px 0;
+    line-height: 1.3;
+  }
+  .panel-content p, .panel-content div {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.75;
+  }
+  .panel-content pre, .panel-content code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--green-txt);
+    background: var(--green-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .panel-content pre {
+    padding: 10px 12px;
+    border-left: 2px solid var(--green-txt);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    margin: 8px 0;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .panel-content blockquote {
+    background: #e6f1fb;
+    border: 0.5px solid #b5d4f4;
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #0c447c;
+    line-height: 1.65;
+    margin: 12px 0;
+    font-family: var(--font-mono);
+  }
+  .panel-content a {
+    color: var(--green-txt);
+    text-decoration: none;
+  }
+  .panel-content a:hover { text-decoration: underline; }
+
+  .lesson-placeholder {
+    text-align: center;
+    padding: 40px 16px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .lesson-placeholder-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  /* ── PLAY TAB ── */
+  .now-playing {
+    padding: 14px 16px;
+    border-bottom: 0.5px solid var(--border);
+    flex-shrink: 0;
+  }
+  .now-playing-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .now-playing-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .now-playing-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .player-area {
+    flex-shrink: 0;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--bg2);
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 8px 0;
+  }
+  .player-placeholder {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 40px 20px;
+  }
+  .player-placeholder-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    opacity: 0.4;
+  }
+  /* Force asciinema embeds to fit panel width */
+  .player-area > div { width: 100%; }
+  .player-area .asciicast { width: 100% !important; max-width: 100% !important; }
+  .player-area .asciicast iframe {
+    max-width: 100% !important;
+    width: 100% !important;
+    min-height: 350px !important;
+    height: 350px !important;
+  }
+  .player-area .asciicast img {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  .cast-list {
+    flex: 1;
+    overflow-y: auto;
+    list-style: none;
+  }
+  .cast-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 0.5px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .cast-item:hover { background: var(--bg3); }
+  .cast-item.active {
+    background: var(--green-bg);
+    color: var(--green-txt);
+  }
+  .cast-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    width: 20px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .cast-item.active .cast-num { color: var(--green-txt); opacity: 0.7; }
+  .cast-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .cast-item.active .cast-dot { background: var(--green-txt); }
+  .cast-name { flex: 1; line-height: 1.3; }
+  .cast-play-icon {
+    font-size: 10px;
+    color: var(--muted);
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .cast-item:hover .cast-play-icon,
+  .cast-item.active .cast-play-icon { opacity: 1; }
+  .cast-item.active .cast-play-icon { color: var(--green-txt); }
+
+  /* Progress row */
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-top: 0.5px solid var(--border);
+    flex-shrink: 0;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--green-txt);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+  .progress-text {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Play tab content */
+  .play-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .play-item {
+    display: block;
+    padding: 10px 16px;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 13px;
+    color: var(--text);
+    text-decoration: none;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .play-item:hover { background: var(--bg3); }
+  .play-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-right: 8px;
+  }
+
+  /* Panel footer */
+  .panel-footer {
+    padding: 10px 16px;
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    background: var(--bg);
+  }
+  .footer-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .footer-btn.primary {
+    background: var(--green-bg);
+    color: var(--green-txt);
+    border: none;
+  }
+  .footer-btn.primary:hover { background: #d3e8b8; }
+  .footer-btn.secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 0.5px solid var(--border);
+  }
+  .footer-btn.secondary:hover { border-color: rgba(0,0,0,0.25); color: var(--text); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Responsive */
+  @media (max-width: 800px) {
+    .panel { display: none; }
+    .resize-handle { display: none; }
+    .nav-hide { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  {% for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="flash-bar flash-{{ category }}">{{ message }}</div>
+  {% endfor %}
+
+  <!-- NAV -->
+  <nav>
+    <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+    <div class="nav-links">
+      <a href="/lab/" class="nav-hide">Lab</a>
+      <a href="/golf/" class="nav-hide">Golf</a>
+      <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer" class="nav-hide">Forum</a>
+      <a href="{{ url_for('faq') }}" class="nav-hide">FAQ</a>
+      <a href="{{ url_for('settings') }}" class="nav-hide">Profile</a>
+      <a href="{{ url_for('logout') }}">Log out</a>
+      <div class="nav-user">
+        <div class="nav-user-dot"></div>
+        {{ uname }}
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main" id="main-grid">
+
+    <!-- TERMINAL -->
+    <div class="term-area">
+      <div class="term-topbar">
+        <div class="term-dots">
+          <div class="term-dot r"></div>
+          <div class="term-dot y"></div>
+          <div class="term-dot g"></div>
+        </div>
+        <div class="term-info" id="term-info">
+          <div class="term-info-dot"></div>
+          <span id="term-info-text">{{ uname }}@webminal</span>
+        </div>
+        <div class="term-actions">
+          <button class="term-action" onclick="popoutTerminal()">pop-out</button>
+          <button class="term-action" onclick="document.getElementById('term-iframe').src=document.getElementById('term-iframe').src">reconnect</button>
+          <button class="term-action" onclick="togglePanel()">panel</button>
+        </div>
+      </div>
+      <iframe src="/terminal/proxy/" class="term-iframe" id="term-iframe" scrolling="yes" allowfullscreen></iframe>
+      <!-- <iframe src="/terminal3/proxy/" class="term-iframe" id="term-iframe" scrolling="yes" allowfullscreen></iframe> -->
+    </div>
+
+    <!-- RESIZE HANDLE -->
+    <div class="resize-handle" id="resize-handle">
+      <div class="resize-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+
+    <!-- LESSON PANEL -->
+    <div class="panel" id="lesson-panel">
+
+      <div class="panel-header">
+        <div class="panel-user">
+          <div class="user-avatar">{{ uname[:2] }}</div>
+          <div class="user-info">
+            <div class="user-name">{{ uname }}</div>
+            <div class="user-status">connected</div>
+          </div>
+          <a href="{{ url_for('settings') }}" style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-decoration:none;">profile</a>
+        </div>
+        <div class="panel-tabs">
+          <button class="panel-tab active" onclick="switchTab(this,'lessons')">lessons</button>
+          <button class="panel-tab" onclick="switchTab(this,'play')">play</button>
+        </div>
+      </div>
+
+      <!-- LESSONS TAB -->
+      <div class="tab-content active" id="tab-lessons">
+        <div class="panel-selector">
+          <div class="selector-label">// SELECT LESSON</div>
+          {{ form.side_course(class="selector-select", id="side_course") }}
+        </div>
+
+        <div class="panel-content" id="side-content">
+          <div class="lesson-placeholder">
+            <div class="lesson-placeholder-icon">&#9654;</div>
+            Select a lesson above to get started.<br>
+            Content will appear here as you pick a topic.
+          </div>
+        </div>
+
+        <div class="progress-row">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="progress-text" id="progress-text">0 / 0 visited</div>
+        </div>
+
+        <div class="panel-footer">
+          <button class="footer-btn secondary" onclick="prevLesson()">prev</button>
+          <button class="footer-btn primary" onclick="nextLesson()">next</button>
+        </div>
+      </div>
+
+      <!-- PLAY TAB -->
+      <div class="tab-content" id="tab-play">
+
+        <div class="now-playing">
+          <div class="now-playing-label">// NOW PLAYING</div>
+          <div class="now-playing-title" id="np-title">Select a screencast</div>
+          <div class="now-playing-sub" id="np-sub">Pick one from the list to watch &amp; practise</div>
+        </div>
+
+        <div class="player-area" id="player-area">
+          <div class="player-placeholder">
+            <div class="player-placeholder-icon">&#9654;</div>
+            Click a screencast to load it here
+          </div>
+        </div>
+
+        <ul class="cast-list" id="cast-list">
+          <li class="cast-item" data-idx="0"  data-id="72p4b9efj26tyq92mjjiya3ja" data-title="Change terminal colors"><span class="cast-num">01</span><span class="cast-dot"></span><span class="cast-name">Change terminal colors</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="1"  data-id="f5emdzcml9k7udl3sechepyh5" data-title="Test file existence"><span class="cast-num">02</span><span class="cast-dot"></span><span class="cast-name">Test file existence</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="2"  data-id="bmdae5y98o8pug4tapqx6tgxv" data-title="Create file with nano"><span class="cast-num">03</span><span class="cast-dot"></span><span class="cast-name">Create file with nano</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="3"  data-id="33118" data-title="Search with grep"><span class="cast-num">04</span><span class="cast-dot"></span><span class="cast-name">Search with grep</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="4"  data-id="33193" data-title="Print lines with sed"><span class="cast-num">05</span><span class="cast-dot"></span><span class="cast-name">Print lines with sed</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="5"  data-id="33206" data-title="Understanding atime, ctime, mtime"><span class="cast-num">06</span><span class="cast-dot"></span><span class="cast-name">atime, ctime, mtime</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="6"  data-id="33246" data-title="Find by name, type, size"><span class="cast-num">07</span><span class="cast-dot"></span><span class="cast-name">Find by name, type, size</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="7"  data-id="33288" data-title="grep pattern matching"><span class="cast-num">08</span><span class="cast-dot"></span><span class="cast-name">grep pattern matching</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="8"  data-id="33344" data-title="Backup with mv"><span class="cast-num">09</span><span class="cast-dot"></span><span class="cast-name">Backup with mv</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="9"  data-id="33433" data-title="Create hardlinks"><span class="cast-num">10</span><span class="cast-dot"></span><span class="cast-name">Create hardlinks</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="10" data-id="33476" data-title="Create symlinks"><span class="cast-num">11</span><span class="cast-dot"></span><span class="cast-name">Create symlinks</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="11" data-id="33494" data-title="Extract filename &amp; dirname"><span class="cast-num">12</span><span class="cast-dot"></span><span class="cast-name">Extract filename &amp; dirname</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="12" data-id="33653" data-title="Create file with vim"><span class="cast-num">13</span><span class="cast-dot"></span><span class="cast-name">Create file with vim</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="13" data-id="34882" data-title="Files used by a process"><span class="cast-num">14</span><span class="cast-dot"></span><span class="cast-name">Files used by a process</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="14" data-id="34885" data-title="Open fd &amp; file delete"><span class="cast-num">15</span><span class="cast-dot"></span><span class="cast-name">Open fd &amp; file delete</span><span class="cast-play-icon">&#9654;</span></li>
+          <li class="cast-item" data-idx="15" data-id="35346" data-title="rsync vs cp"><span class="cast-num">16</span><span class="cast-dot"></span><span class="cast-name">rsync vs cp</span><span class="cast-play-icon">&#9654;</span></li>
+        </ul>
+
+        <div class="progress-row">
+          <div class="progress-bar"><div class="progress-fill" id="play-progress-fill"></div></div>
+          <div class="progress-text" id="play-progress-text">0 / 16</div>
+        </div>
+
+        <div class="panel-footer">
+          <button class="footer-btn secondary" onclick="prevCast()">prev</button>
+          <button class="footer-btn primary" onclick="nextCast()">next</button>
+        </div>
+
+      </div>
+
     </div>
   </div>
-{% endblock contents %}
+</div>
 
+<script>
+// ── Lesson loading via AJAX (existing mechanism) ──
+function getTotal() {
+  var sel = document.getElementById('side_course');
+  return sel.options.length - 1; // minus "Select"
+}
+
+function getPosition() {
+  var sel = document.getElementById('side_course');
+  return sel.selectedIndex; // 0 = "Select", 1 = first lesson
+}
+
+function updateProgress() {
+  var total = getTotal();
+  var pos = getPosition();
+  var pct = (total > 0 && pos > 0) ? Math.round((pos / total) * 100) : 0;
+  var fill = document.getElementById('progress-fill');
+  var txt = document.getElementById('progress-text');
+  if (fill) fill.style.width = pct + '%';
+  if (txt) txt.textContent = (pos > 0 ? pos : 0) + ' / ' + total;
+}
+
+$('#side_course').change(function() {
+  var command = '';
+  $('#side_course option:selected').each(function() {
+    command += $(this).text() + ' ';
+  });
+  var lessonName = command.trim().split(' ')[0];
+  if (lessonName === 'Select') return;
+
+  var url = '/help/' + lessonName + '/plain/';
+  $('#side-content').html('<div class="lesson-placeholder">Loading...</div>');
+
+  $.get(url).done(function(data) {
+    $('#side-content').html(data);
+    updateProgress();
+  }).fail(function() {
+    $('#side-content').html('<div class="lesson-placeholder">Could not load lesson content.</div>');
+  });
+});
+
+// ── Prev / Next ──
+function nextLesson() {
+  var sel = document.getElementById('side_course');
+  if (sel.selectedIndex < sel.options.length - 1) {
+    sel.selectedIndex++;
+    $(sel).trigger('change');
+  }
+}
+
+function prevLesson() {
+  var sel = document.getElementById('side_course');
+  if (sel.selectedIndex > 1) { // skip "Select" at index 0
+    sel.selectedIndex--;
+    $(sel).trigger('change');
+  }
+}
+
+// ── Tabs ──
+function switchTab(btn, tab) {
+  document.querySelectorAll('.panel-tab').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(function(tc) { tc.classList.remove('active'); });
+  var target = document.getElementById('tab-' + tab);
+  if (target) target.classList.add('active');
+  // Update topbar info text
+  var infoText = document.getElementById('term-info-text');
+  if (tab === 'play') {
+    infoText.textContent = 'play \u00b7 watch & practise';
+  } else {
+    infoText.textContent = '{{ uname }}' + '@webminal';
+  }
+}
+
+// ── Panel toggle ──
+function togglePanel() {
+  document.getElementById('main-grid').classList.toggle('panel-collapsed');
+}
+
+// ── Pop-out terminal ──
+function popoutTerminal() {
+  window.open('/terminal/proxy/', 'webminal_terminal', 'width=800,height=500');
+  // window.open('/terminal3/proxy/', 'webminal_terminal', 'width=800,height=500');
+}
+
+// ── Resizable panel ──
+(function() {
+  var handle = document.getElementById('resize-handle');
+  var panel = document.getElementById('lesson-panel');
+  var main = document.getElementById('main-grid');
+  var iframe = document.getElementById('term-iframe');
+  var dragging = false;
+
+  handle.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    dragging = true;
+    handle.classList.add('dragging');
+    // Prevent iframe from eating mouse events while dragging
+    iframe.style.pointerEvents = 'none';
+    document.body.style.cursor = 'col-resize';
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    var mainRect = main.getBoundingClientRect();
+    var newPanelWidth = mainRect.right - e.clientX;
+    // Clamp between 200 and 600
+    newPanelWidth = Math.max(200, Math.min(600, newPanelWidth));
+    panel.style.width = newPanelWidth + 'px';
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    iframe.style.pointerEvents = '';
+    document.body.style.cursor = '';
+    // Re-render active screencast after resize so it fits new width
+    if (currentCastIdx >= 0) {
+      loadCast(currentCastIdx);
+    }
+  });
+})();
+
+// ── Play tab: screencast loading ──
+var currentCastIdx = -1;
+var totalCasts = 16;
+
+function loadCast(idx) {
+  var items = document.querySelectorAll('.cast-item');
+  if (idx < 0 || idx >= items.length) return;
+
+  currentCastIdx = idx;
+  var item = items[idx];
+  var castId = item.getAttribute('data-id');
+  var castTitle = item.getAttribute('data-title');
+
+  document.getElementById('np-title').textContent = castTitle;
+  document.getElementById('np-sub').textContent = 'Screencast #' + String(idx + 1).padStart(2, '0');
+
+  items.forEach(function(el) { el.classList.remove('active'); });
+  item.classList.add('active');
+  item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+  var playerArea = document.getElementById('player-area');
+  playerArea.innerHTML = '<div class="player-placeholder">Loading screencast...</div>';
+
+  var script = document.createElement('script');
+  script.src = 'https://asciinema.org/a/' + castId + '.js';
+  script.id = 'asciicast-' + castId;
+  script.async = true;
+
+  var container = document.createElement('div');
+  container.style.width = '100%';
+  container.style.padding = '8px';
+  container.appendChild(script);
+
+  playerArea.innerHTML = '';
+  playerArea.appendChild(container);
+
+  updatePlayProgress();
+}
+
+function nextCast() {
+  if (currentCastIdx < totalCasts - 1) loadCast(currentCastIdx + 1);
+}
+
+function prevCast() {
+  if (currentCastIdx > 0) loadCast(currentCastIdx - 1);
+}
+
+function updatePlayProgress() {
+  var pos = currentCastIdx + 1;
+  var pct = Math.round((pos / totalCasts) * 100);
+  var fill = document.getElementById('play-progress-fill');
+  var txt = document.getElementById('play-progress-text');
+  if (fill) fill.style.width = pct + '%';
+  if (txt) txt.textContent = pos + ' / ' + totalCasts;
+}
+
+document.querySelectorAll('.cast-item').forEach(function(item) {
+  item.addEventListener('click', function() {
+    loadCast(parseInt(this.getAttribute('data-idx')));
+  });
+});
+
+// ── Init progress on load ──
+updateProgress();
+</script>
+</body>
+</html>

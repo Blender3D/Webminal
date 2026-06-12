@@ -1,0 +1,15 @@
+{
+  "id": "dir_tree",
+  "title": "The Architect",
+  "difficulty": "advanced",
+  "par": 3,
+  "description": "Create this directory structure under ~/golf/project/: src/main/ src/test/ docs/ build/release/ build/debug/ — all directories must exist",
+  "setup": "rm -rf ~/golf/project",
+  "validate": "test -d ~/golf/project/src/main && test -d ~/golf/project/src/test && test -d ~/golf/project/docs && test -d ~/golf/project/build/release && test -d ~/golf/project/build/debug",
+  "hints": [
+    "mkdir -p creates parent directories automatically",
+    "You can pass multiple paths to mkdir",
+    "mkdir -p a/b a/c creates both in one command"
+  ],
+  "category": "file_management"
+}

@@ -1,0 +1,6 @@
+*.pyc
+__pycache__
+database.db
+server.pyc
+*.swp
+static/all.js

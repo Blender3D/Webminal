@@ -1,32 +1,261 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal — Register</title>
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block title %}Register{% endblock title %}
+  :root {
+    --bg: #ffffff; --bg2: #f9f9f8; --bg3: #f3f3f1;
+    --text: #111111; --muted: #6b7280; --border: rgba(0,0,0,0.1);
+    --green-bg: #eaf3de; --green-txt: #3b6d11;
+    --blue-bg: #eff6ff; --blue-txt: #1e40af;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px; --radius-lg: 12px;
+  }
 
-{% block body %}
-  <h2>Register</h2>
-  
-  <p>
-    Registering for a Webminal account is very easy. Before you can use your account, however, our server must process your registration request and create all of your account resources, which may take a few minutes.
-  </p>
-  
-  <p>
-    It is advised to wait for about 10 minutes before trying to login to the Terminal.
-  </p>
-  
-  {% from "_formhelpers.html" import render_field %}
-  <form method="post" action="{{ url_for('register') }}">
-    {{ render_field(form.username) }}
-    {{ render_field(form.email) }}
-    {{ render_field(form.password) }}
-    {{ render_field(form.confirm) }}
-    {{ render_field(form.accept_tos) }}
-    
-    <div class="clearfix">
-      <label for="submit"></label>
-      <div class="input">
-        <input type="submit" name="submit" class="btn" value="Register" />
+  html, body { height: 100%; font-family: var(--font-sans); background: var(--bg2); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+  .flash-bar { padding: 10px 24px; font-size: 13px; text-align: center; }
+  .flash-bar.flash-warning { background: #fff3cd; color: #856404; }
+  .flash-bar.flash-error   { background: #f8d7da; color: #721c24; }
+  .flash-bar.flash-info, .flash-bar.flash-message { background: var(--green-bg); color: var(--green-txt); }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; border-bottom: 0.5px solid var(--border);
+    background: var(--bg); position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: var(--radius-md); transition: background 0.15s, color 0.15s; }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links a.active { background: var(--green-bg); color: var(--green-txt); }
+
+  .page { max-width: 460px; margin: 0 auto; padding: 48px 24px 64px; }
+  .page-title { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin-bottom: 6px; text-align: center; }
+  .page-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; text-align: center; }
+  .page-subtitle a { color: var(--green-txt); text-decoration: underline; }
+
+  .card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .form-group input[type="text"],
+  .form-group input[type="password"] {
+    width: 100%; padding: 10px 14px; font-size: 14px;
+    font-family: var(--font-sans); border: 1px solid var(--border);
+    border-radius: var(--radius-md); background: var(--bg); transition: border-color 0.15s;
+  }
+  .form-group input:focus { outline: none; border-color: var(--green-txt); }
+  .form-error-message { font-size: 12px; color: #dc2626; margin-top: 4px; display: block; }
+
+  .checkbox-group {
+    display: flex; align-items: flex-start; gap: 8px; margin-bottom: 16px;
+  }
+  .checkbox-group input[type="checkbox"] {
+    width: 16px; height: 16px; accent-color: var(--green-txt); margin-top: 2px; cursor: pointer;
+  }
+  .checkbox-group label { font-size: 13px; color: var(--text); cursor: pointer; }
+  .checkbox-group a { color: var(--green-txt); text-decoration: underline; }
+
+  .hint {
+    font-size: 12px; color: var(--muted); background: var(--bg3);
+    padding: 8px 12px; border-radius: var(--radius-md); margin-bottom: 16px;
+  }
+
+  .btn-submit {
+    width: 100%; padding: 11px; background: var(--green-txt); color: #fff;
+    border: none; border-radius: var(--radius-md); font-family: var(--font-sans);
+    font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-submit:hover { background: #2d5a0c; }
+
+  .form-footer { text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
+  .form-footer a { color: var(--green-txt); text-decoration: underline; }
+
+  .steps {
+    background: var(--blue-bg); border-radius: var(--radius-md);
+    padding: 16px 20px; font-size: 13px; line-height: 1.7; color: var(--blue-txt);
+  }
+  .steps strong { font-weight: 600; }
+  .steps ol { padding-left: 18px; margin-top: 6px; }
+  .steps li { margin-bottom: 4px; }
+  .steps a { color: var(--blue-txt); text-decoration: underline; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(2px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg); border-radius: var(--radius-lg);
+    width: 90%; max-width: 520px; max-height: 80vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+  .modal-header h3 {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+  }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 18px; line-height: 1;
+    padding: 4px 8px; border-radius: var(--radius-md);
+    transition: background 0.15s, color 0.15s;
+  }
+  .modal-close:hover { background: var(--bg3); color: var(--text); }
+  .modal-body {
+    padding: 20px; overflow-y: auto; font-size: 14px; line-height: 1.7;
+  }
+  .modal-body p { margin-bottom: 12px; }
+  .modal-body p:last-child { margin-bottom: 0; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    nav { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+    .nav-links { gap: 2px; flex-wrap: wrap; }
+    .nav-links a { font-size: 12px; padding: 4px 8px; }
+    .nav-hide { display: none; }
+    .page { padding: 36px 16px 48px; }
+    .page-title { font-size: 18px; }
+    .card { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+{% for category, message in get_flashed_messages(with_categories=true) %}
+  <div class="flash-bar flash-{{ category }}">{{ message }}</div>
+{% endfor %}
+
+<nav>
+  <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+  <div class="nav-links">
+    <a href="{{ url_for('terminal') }}">Terminal</a>
+    <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer">Forum</a>
+    <a href="{{ url_for('faq') }}">FAQ</a>
+    <a href="{{ url_for('contact') }}" class="nav-hide">Team</a>
+    <a href="{{ url_for('about') }}" class="nav-hide">About</a>
+    <a href="{{ url_for('register') }}" class="active">Register</a>
+    <a href="{{ url_for('login') }}">Log in</a>
+  </div>
+</nav>
+
+<!-- LIVE TICKER -->
+<section style="border-bottom: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; height: 32px; background: #0d0f14; display: flex; align-items: center; padding: 0;">
+  <a href="/live/" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #00cc6a; padding: 0 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; text-decoration: none; border-right: 1px solid rgba(255,255,255,0.06); height: 100%;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00cc6a;animation:pulse 2s infinite;"></span>live</a>
+  <div style="flex:1; overflow: hidden; position: relative; height: 100%;">
+    <div id="live-ticker" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b7280; white-space: nowrap; position: absolute; display: flex; gap: 32px; align-items: center; height: 100%; will-change: transform;"></div>
+  </div>
+</section>
+
+<div class="page">
+  <h1 class="page-title">Create your account</h1>
+  <p class="page-subtitle">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+
+  <div class="card">
+    <form method="post" action="{{ url_for('register') }}">
+      {{ form.csrf_token }}
+
+      <div class="form-group">
+        {{ form.username.label }}
+        {{ form.username(size=20) }}
+        {% for error in form.username.errors %}
+          <span class="form-error-message">{{ error }}</span>
+        {% endfor %}
       </div>
-    </div>
-  </form>
-{% endblock body %}
 
+      <div class="form-group">
+        {{ form.email.label }}
+        {{ form.email(size=30) }}
+        {% for error in form.email.errors %}
+          <span class="form-error-message">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        {{ form.password.label }}
+        {{ form.password(size=20) }}
+        {% for error in form.password.errors %}
+          <span class="form-error-message">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        {{ form.confirm.label }}
+        {{ form.confirm(size=20) }}
+        {% for error in form.confirm.errors %}
+          <span class="form-error-message">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="checkbox-group">
+        {{ form.accept_tos }}
+        <label for="accept_tos">I accept the <a href="#" onclick="document.getElementById('tos-modal').classList.add('open');return false;">Terms of Service</a></label>
+      </div>
+
+      <div class="hint">We recommend Firefox or Chrome. Username and password are case-sensitive. An activation link will be sent to your email.</div>
+
+      <button type="submit" class="btn-submit">Register</button>
+    </form>
+  </div>
+
+  <div class="steps">
+    <strong>Registration process:</strong>
+    <ol>
+      <li>Fill in the form and click Register</li>
+      <li>Check your email for the activation link</li>
+      <li>Click the activation link to confirm</li>
+      <li>Wait 2 minutes, then <a href="{{ url_for('login') }}">log in</a></li>
+    </ol>
+  </div>
+</div>
+
+<!-- ToS Modal -->
+<div class="modal-overlay" id="tos-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Terms of Service</h3>
+      <button class="modal-close" onclick="document.getElementById('tos-modal').classList.remove('open');">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>This service must be used for learning and sharing GNU/Linux knowledge with fellow community members. Any illegal activities including, but not limited to, spamming, port flooding, port scanning, IRC bots, encryption cracking, unauthorized connections to remote hosts, or any sort of scams are not allowed.</p>
+      <p>If you use Webminal for any illegal activities, we reserve the right to prosecute you in a jurisdiction of our choice.</p>
+      <p>In order to use Webminal, you have to respect people here and help them. Happy Learning :)</p>
+      <p>We may suspend the service at any time without prior notice. We will do all we can to restart the service as soon as possible.</p>
+      <p>We cannot warrant that this website will be free of viruses or defects of any description, and we will not be held responsible for any technical problems you may suffer as a result of your use of this website.</p>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('tos-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+</script>
+
+<script>
+(function() {
+  var ticker = document.getElementById('live-ticker');
+  if (!ticker) return;
+  function buildTicker(cmds) { ticker.innerHTML = ''; var allCmds = cmds.concat(cmds); for (var i = 0; i < allCmds.length; i++) { var span = document.createElement('span'); span.textContent = allCmds[i]; span.style.color = '#c8d3f5'; ticker.appendChild(span); var dot = document.createElement('span'); dot.textContent = '\u00b7'; dot.style.color = '#6b7280'; dot.style.margin = '0 8px'; ticker.appendChild(dot); } }
+  function startScroll() { var pos = 0, halfWidth = ticker.scrollWidth / 2; if (halfWidth === 0) return; function step() { pos -= 0.5; if (Math.abs(pos) >= halfWidth) pos = 0; ticker.style.transform = 'translateX(' + pos + 'px)'; requestAnimationFrame(step); } step(); }
+  function fetchAndScroll() { var xhr = new XMLHttpRequest(); xhr.open('GET', '/api/live/?t=' + Date.now()); xhr.onload = function() { if (xhr.status === 200 && xhr.responseText.trim()) { var cmds = xhr.responseText.trim().split('\n'); if (cmds.length > 0) { buildTicker(cmds); startScroll(); } } }; xhr.send(); }
+  fetchAndScroll(); setInterval(fetchAndScroll, 15000);
+})();
+</script>
+
+</body>
+</html>

@@ -1,5 +1,5 @@
-$(function() {
-  $('#command').hide();
+  $(function() {
+ // $('#command').hide();
   
   $('.flash-message, .flash-error, .flash-warning, .flash-success').each(function() {
     $(this).hide().addClass('notification');
@@ -12,16 +12,17 @@ $(function() {
     setTimeout(function() { $(this).trigger('click'); }, 5000);
   });
   
-  if ($('body').hasClass('terminal')) {
-    $('<div />').prop('id', 'overlay').hide().appendTo('#side');
-  }
+ // if ($('body').hasClass('terminal')) {
+  //  $('<div />').prop('id', 'overlay').hide().appendTo('#side');
+//  }
   
-  last_command('404');
+ // last_command('404');
+
 });
 
+/*
 function last_command(command) {
   //alert(command);
-  
   if (command != '') {
     var url = '/help/' + command.split(' ')[0] + '/plain/';
     $('#overlay').show();
@@ -31,4 +32,6 @@ function last_command(command) {
       $('#overlay').stop().fadeOut();
     });
   }
-}
+}*/
+
+

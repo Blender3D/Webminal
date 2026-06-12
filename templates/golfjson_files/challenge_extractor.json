@@ -1,0 +1,15 @@
+{
+  "id": "extractor",
+  "title": "The Extractor",
+  "difficulty": "intermediate",
+  "par": 2,
+  "description": "Extract only the email addresses (column 3) from ~/golf/users.csv and save them to ~/golf/emails.txt — one per line, no header",
+  "setup": "mkdir -p ~/golf && printf 'id,name,email\\n1,Alice,alice@example.com\\n2,Bob,bob@test.org\\n3,Charlie,charlie@demo.net\\n4,Dave,dave@sample.io\\n5,Eve,eve@mail.com\\n' > ~/golf/users.csv && rm -f ~/golf/emails.txt",
+  "validate": "diff <(tail -n +2 ~/golf/users.csv | cut -d, -f3) ~/golf/emails.txt >/dev/null 2>&1",
+  "hints": [
+    "cut can extract columns from delimited files",
+    "Use -d to set delimiter and -f to pick fields",
+    "tail -n +2 skips the header line"
+  ],
+  "category": "text_processing"
+}

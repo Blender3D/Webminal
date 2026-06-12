@@ -1,0 +1,151 @@
+{
+  "$schema": "https://fundingjson.org/schema/v1.1.0.json",
+  "version": "v1.1.0",
+  "entity": {
+    "type": "individual",
+    "role": "owner",
+    "name": "Lakshmipathi Ganapathi",
+    "email": "efgadmin@webminal.org",
+    "description": "Winner of FOSSIndia awards. Open source programmer and Linux kernel contributor. Creator of Webminal, a free browser-based Linux learning platform serving 500,000+ users from 2,700+ universities across 50+ countries since 2011. Contributor to Btrfs filesystem in the Linux kernel.",
+    "webpageUrl": {
+      "url": "https://www.webminal.org"
+    }
+  },
+  "projects": [
+    {
+      "guid": "webminal",
+      "name": "Webminal",
+      "description": "Webminal is a free, browser-based Linux terminal and learning platform running since 2011 on a single server with 8GB RAM. It provides real shell access (not a simulation) for students to learn Linux commands, system administration, and programming. Features include 38 hands-on tutorials, a Root Lab powered by User Mode Linux for practicing fdisk/LVM/RAID with full root access, live command tracking via eBPF, and a shared MySQL database for SQL practice. Used by students from Harvard, MIT, Stanford, Georgia Tech, Thapar, SRMIST, and 2,700+ institutions across 50+ countries.",
+      "webpageUrl": {
+        "url": "https://www.webminal.org"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/lakshmipathi/webminal"
+      },
+      "licenses": [
+        "spdx:GPL-3.0-or-later"
+      ],
+      "tags": [
+        "linux",
+        "education",
+        "terminal",
+        "learning-platform",
+        "foss-education",
+        "sysadmin",
+        "ebpf",
+        "user-mode-linux",
+        "india"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "github-sponsors",
+        "type": "payment-provider",
+        "address": "https://github.com/sponsors/Lakshmipathi",
+        "description": "GitHub Sponsors — primary funding channel, 0% fee on personal accounts"
+      },
+      {
+        "guid": "bank-transfer",
+        "type": "bank",
+        "description": "Indian bank account for direct grants (details shared on request)"
+      }
+    ],
+    "plans": [
+      {
+        "guid": "foss-united-grant",
+        "status": "active",
+        "name": "FOSS United Project Grant - Webminal 2026",
+        "description": "Developer stipend to work full-time on Webminal and infrastructure costs. See Milestones below for more details",
+        "amount": 600000,
+        "currency": "INR",
+        "frequency": "Quaterly",
+        "channels": [
+          "bank-transfer"
+        ],
+        "milestones": [
+          {
+            "id": "milestone-1",
+            "title": "Foundation, Security and Progress Tracking",
+            "status": "in-progress",
+            "targets": [
+              "Python 2.7 to Python 3 migration complete",
+              "Per-user course-progress system",
+              "Course dashboard showing each user's available,in-progress,completed courses with progress bars",
+              "Tutorial verification harness: step-by-step shell-predicate checks; ",
+              "Refactor codebase and isolate secrets into separate config",	      
+	      "Explore Migration path to Hetzner dedicated server"
+            ]
+          },
+          {
+            "id": "milestone-2",
+            "title": "Course Platform: Developer Features and Testing Infrastructure",
+            "status": "pending",
+            "targets": [
+              "Add Jupyter notebook access",
+              "Allow small static webhosting with html",
+              "PostgreSQL access to all users",
+              "More hands-on tutorials: nginx, Podman, SSL/TLS, containers, networking",              
+              "Per-step runtime verification: 'Verify Task' button, student cannot advance until the check passes",
+              "Visual refresh: UX patterns (lesson cards, progress bars, sidebar layout) into existing Flask templates",
+              "Browser-based UI regression test suite runs as part of CI jobs",
+              "Monitor infra via watchdog and rootkits"
+            ]
+          },
+          {
+            "id": "milestone-3",
+            "title": "Linux Kernel Programming Course",
+            "status": "pending",
+            "targets": [
+              "character drivers: Need to explore this further",
+              "Pre-install kernel-headers on all environment",
+              "integrate basic/mid level kernel courses into platform"
+            ]
+          },
+          {
+            "id": "milestone-4",
+            "title": "Scale, Classroom Features",
+            "status": "pending",
+            "targets": [
+              "Full documentation re-verification on new server",
+              "Re-enable Group feature so professors can see all enrolled students' course progress",
+              "Achievement badges like Quick Learner, Slow but Steady etc",
+              "Improvements to Group feature for university classroom adoption (staff options to access students files/outputs/reports)",
+              "Self-hostable distribution: Docker compose so edu institutions can run a private Webminal instance on their own server.",
+              "Reachout to more universities and send new updates to existing school/colleges"
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "yearly-hosting",
+        "status": "active",
+        "name": "Monthly server and infrastructure costs",
+        "description": "shared server hosting, bare-metal server, domain renewal, SSL certificates, and backup storage.",
+        "amount": 200000,
+        "currency": "INR",
+        "frequency": "one-time",
+        "channels": [
+          "bank-transfer"
+        ]
+      }
+    ],
+    "history": [
+      {
+        "year": 2024,
+        "income": 0,
+        "expenses": 180000,
+        "currency": "INR",
+        "description": "Server hosting paid from personal savings. No ads, no paid plans, no VC funding."
+      },
+      {
+        "year": 2025,
+        "income": 0,
+        "expenses": 180000,
+        "currency": "INR",
+        "description": "Server hosting paid from personal savings. No ads, no paid plans, no VC funding."
+      }
+    ]
+  }
+}

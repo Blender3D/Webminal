@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal — Profile</title>
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #ffffff;
+    --bg2:       #f9f9f8;
+    --bg3:       #f3f3f1;
+    --text:      #111111;
+    --muted:     #6b7280;
+    --border:    rgba(0,0,0,0.1);
+    --green-bg:  #eaf3de;
+    --green-txt: #3b6d11;
+    --green-mid: #97c459;
+    --red-bg:    #fef2f2;
+    --red-txt:   #991b1b;
+    --blue-bg:   #eff6ff;
+    --blue-txt:  #1e40af;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: var(--font-sans);
+    background: var(--bg2);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── FLASH ── */
+  .flash-bar {
+    padding: 10px 24px;
+    font-size: 13px;
+    text-align: center;
+  }
+  .flash-bar.flash-warning { background: #fff3cd; color: #856404; }
+  .flash-bar.flash-error   { background: #f8d7da; color: #721c24; }
+  .flash-bar.flash-info, .flash-bar.flash-message { background: var(--green-bg); color: var(--green-txt); }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 24px;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .logo {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: var(--radius-md);
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links a.active { background: var(--green-bg); color: var(--green-txt); }
+  .nav-links .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--green-txt);
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: var(--radius-md);
+    background: var(--green-bg);
+  }
+  .nav-user-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #00cc6a;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── PAGE ── */
+  .page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--green-bg);
+    color: var(--green-txt);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .page-header h2 {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .page-header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ── STATUS BADGE ── */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .status-badge.active {
+    background: var(--green-bg);
+    color: var(--green-txt);
+  }
+  .status-badge.inactive {
+    background: var(--red-bg);
+    color: var(--red-txt);
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .status-badge.active .status-dot { background: #00cc6a; }
+  .status-badge.inactive .status-dot { background: var(--red-txt); }
+
+  /* ── INFO ROWS ── */
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--muted); font-size: 13px; }
+  .info-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* ── HINT ── */
+  .hint {
+    background: var(--blue-bg);
+    color: var(--blue-txt);
+    font-size: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+  .hint-warn {
+    background: #fff7ed;
+    color: #9a3412;
+  }
+
+  /* ── FORM / CHECKBOXES ── */
+  .distro-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .distro-list li {
+    list-style: none;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .distro-list li:last-child { border-bottom: none; }
+  .distro-list li label {
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .distro-list li input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--green-txt);
+    cursor: pointer;
+    margin-right: 8px;
+  }
+
+  .mail-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .mail-check input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--green-txt);
+    cursor: pointer;
+  }
+
+  /* ── BUTTON ── */
+  .btn-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 20px;
+    padding: 10px 24px;
+    background: var(--green-txt);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-save:hover { background: #2d5a0c; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    nav { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+    .nav-links { gap: 2px; flex-wrap: wrap; }
+    .nav-links a { font-size: 12px; padding: 4px 8px; }
+    .nav-hide { display: none; }
+    .page { padding: 24px 16px 48px; }
+    .page-title { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+{% for category, message in get_flashed_messages(with_categories=true) %}
+  <div class="flash-bar flash-{{ category }}">{{ message }}</div>
+{% endfor %}
+
+<nav>
+  <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+  <div class="nav-links">
+    <a href="{{ url_for('terminal') }}">Terminal</a>
+    <a href="/lab/">Lab</a>
+    <a href="/golf/">Golf</a>
+    <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer" class="nav-hide">Forum</a>
+    <a href="{{ url_for('faq') }}">FAQ</a>
+    <a href="{{ url_for('settings') }}" class="active">Profile</a>
+    <a href="{{ url_for('logout') }}">Log out</a>
+    <div class="nav-user">
+      <div class="nav-user-dot"></div>
+      {{ usrname }}
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="avatar">{{ usrname[:2] }}</div>
+    <div>
+      <h2>{{ usrname }}</h2>
+      <p>Account status:
+        {% if acc_status and 'Active' in acc_status %}
+          <span class="status-badge active"><span class="status-dot"></span>Active</span>
+        {% else %}
+          <span class="status-badge inactive"><span class="status-dot"></span>{{ acc_status or 'Checking...' }}</span>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- ACTIVITY -->
+  <div class="card">
+    <div class="card-title">Your Activity</div>
+    <div class="info-row">
+      <span class="info-label">Member since</span>
+      <span class="info-value">{{ joined or 'N/A' }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Total logins</span>
+      <span class="info-value">{{ logins or 0 }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Lab access</span>
+      {% if lab_enabled %}
+        <span class="info-value" style="color: var(--green-txt);">Enabled — type <code>lab start</code></span>
+      {% else %}
+        <span class="info-value" style="color: var(--muted);">Not enabled — <a href="mailto:efgadmin@webminal.org" style="color: var(--green-txt);">request access</a></span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- TRY THIS COMMAND -->
+  <div class="card" style="background: var(--bg2);">
+    <div class="card-title">Try This Command</div>
+    <div id="cmd-tip" style="font-family: var(--font-mono); font-size: 13px; background: #0d0f14; color: #c8d3f5; padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 8px;"></div>
+    <div id="cmd-desc" style="font-size: 13px; color: var(--muted);"></div>
+  </div>
+  <script>
+  (function() {
+    var tips = [
+      {cmd: "awk '{print NR, $0}' file.txt", desc: "Print each line with line numbers"},
+      {cmd: "find . -name '*.log' -mtime +7 -delete", desc: "Delete log files older than 7 days"},
+      {cmd: "du -sh * | sort -rh | head -5", desc: "Top 5 largest files/dirs in current directory"},
+      {cmd: "grep -rn 'TODO' .", desc: "Find all TODO comments in your code"},
+      {cmd: "tar czf backup.tar.gz ~/project", desc: "Create a compressed backup of a directory"},
+      {cmd: "cut -d: -f1 /etc/passwd", desc: "List all usernames on the system"},
+      {cmd: "sort file.txt | uniq -c | sort -rn", desc: "Count frequency of each line in a file"},
+      {cmd: "diff <(ls dir1) <(ls dir2)", desc: "Compare contents of two directories"},
+      {cmd: "history | awk '{print $2}' | sort | uniq -c | sort -rn | head", desc: "Your most used commands"},
+      {cmd: "ps aux --sort=-%mem | head", desc: "Top processes by memory usage"},
+      {cmd: "ls -lt | head -10", desc: "10 most recently modified files"},
+      {cmd: "wc -l *.py", desc: "Count lines in all Python files"},
+      {cmd: "sed -i 's/old/new/g' file.txt", desc: "Replace all occurrences in a file"},
+      {cmd: "chmod -R 755 scripts/", desc: "Make all scripts executable recursively"},
+      {cmd: "ln -s /path/to/file shortcut", desc: "Create a symbolic link"},
+      {cmd: "cal 12 2026", desc: "Show calendar for December 2026"},
+      {cmd: "uptime -p", desc: "Show how long the system has been running"},
+      {cmd: "stat file.txt", desc: "Show detailed file information"},
+      {cmd: "tr '[:lower:]' '[:upper:]' < file.txt", desc: "Convert file to uppercase"},
+      {cmd: "comm -23 file1.txt file2.txt", desc: "Lines in file1 but not in file2"},
+      {cmd: "tee output.txt", desc: "Write stdin to both screen and file"},
+      {cmd: "xargs -I{} cp {} backup/", desc: "Copy files from stdin to backup dir"},
+      {cmd: "lsblk", desc: "List all block devices and partitions"},
+      {cmd: "free -h", desc: "Show memory usage in human-readable format"},
+      {cmd: "df -h", desc: "Show disk space usage"},
+      {cmd: "env | grep PATH", desc: "Show your PATH environment variable"},
+      {cmd: "alias ll='ls -la'", desc: "Create a handy alias for detailed listing"},
+      {cmd: "echo $((2**10))", desc: "Quick math in the shell — 2 to the power of 10"},
+      {cmd: "rev <<< 'hello world'", desc: "Reverse a string"},
+      {cmd: "nl file.txt", desc: "Number lines in a file (like cat -n but cleaner)"}
+    ];
+    var day = Math.floor(Date.now() / 86400000) % tips.length;
+    document.getElementById('cmd-tip').textContent = '$ ' + tips[day].cmd;
+    document.getElementById('cmd-desc').textContent = tips[day].desc;
+  })();
+  </script>
+
+  <!-- LOGIN DETAILS -->
+  <div class="card">
+    <div class="card-title">Login Details</div>
+    <div class="info-row">
+      <span class="info-label">Username</span>
+      <span class="info-value">{{ usrname }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Password</span>
+      <span class="info-value" style="color: var(--muted); font-weight: 400;">the case-sensitive password you set</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Website &amp; Terminal</span>
+      <span class="info-value" style="color: var(--green-txt);">same credentials</span>
+    </div>
+    <div class="hint hint-warn">
+      Entering the wrong password more than 5 times will block your IP for 15 minutes. When the terminal prompts for a password, typed characters won't appear &mdash; just type and press Enter.
+    </div>
+  </div>
+
+  <!-- DISTRO PREFERENCE -->
+  <form action="save" method="post">
+    {{ form.csrf_token }}
+    <div class="card">
+      <div class="card-title">Linux Distro Preference</div>
+      <div class="distro-list">
+        {{ form.example2 }}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Notifications</div>
+      <div class="mail-check">
+        {{ form.example }}
+        <label for="example">Email me when something new is added</label>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-save">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1-2 2h11l5 5v11z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save Changes
+    </button>
+  </form>
+
+  <div class="card" style="margin-top: 16px; text-align: center;">
+    <div class="card-title">Support Webminal</div>
+    <p style="font-size: 14px; color: var(--muted); margin-bottom: 10px;">Webminal has been free since 2011 — funded out of pocket, no ads, no tracking. Your sponsorship directly covers server costs and helps us upgrade from 8GB to 128GB or 256GB, allowing parallel lab access to more people.</p>
+    <a href="https://github.com/sponsors/Lakshmipathi" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 20px;background:var(--green-bg);color:var(--green-txt);font-weight:500;font-size:13px;border-radius:var(--radius-md);text-decoration:none;">&#9829; Sponsor on GitHub</a>
+  </div>
+
+  <div style="margin-top: 16px; text-align: center; font-size: 12px; color: var(--muted);">
+    Want to delete your account? Email <strong>efgadmin@webminal.org</strong> with your username.
+  </div>
+
+</div>
+
+</body>
+</html>

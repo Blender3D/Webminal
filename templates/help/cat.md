@@ -1,8 +1,12 @@
 title: cat
 
-# `cat`
+so now you have viewed the file content.`cat` is 
+used to display the entire file content.<br/>
 
-`cat` is a command that prints out the contents of a file.
 
-    $ cat file.txt
-    These are the contents of "file.txt"
+To view only first two lines from the file
+
+	head -2 hello.txt
+
+
+

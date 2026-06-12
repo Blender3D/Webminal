@@ -1,0 +1,15 @@
+{
+  "id": "permission_fix",
+  "title": "The Locksmith",
+  "difficulty": "intermediate",
+  "par": 2,
+  "description": "Make all .sh files in ~/golf/scripts/ executable (chmod +x) and make all .conf files read-only (chmod 444)",
+  "setup": "rm -rf ~/golf/scripts && mkdir -p ~/golf/scripts && touch ~/golf/scripts/start.sh ~/golf/scripts/stop.sh ~/golf/scripts/deploy.sh ~/golf/scripts/app.conf ~/golf/scripts/db.conf && chmod 644 ~/golf/scripts/*.sh && chmod 666 ~/golf/scripts/*.conf",
+  "validate": "test -x ~/golf/scripts/start.sh && test -x ~/golf/scripts/stop.sh && test -x ~/golf/scripts/deploy.sh && test \"$(stat -c %a ~/golf/scripts/app.conf)\" = '444' && test \"$(stat -c %a ~/golf/scripts/db.conf)\" = '444'",
+  "hints": [
+    "chmod can use wildcards: chmod +x *.sh",
+    "444 means read-only for owner, group, and others",
+    "Two commands: one for .sh files, one for .conf files"
+  ],
+  "category": "permissions"
+}

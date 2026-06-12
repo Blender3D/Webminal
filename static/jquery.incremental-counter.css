@@ -1,0 +1,31 @@
+.incremental-counter .num {
+    background: #f8f8f8 none repeat scroll 0 0;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    color: #00aae6;
+    display: inline-block;
+    height: 64px;
+    line-height: 62px;
+    margin: 0 4.5px;
+    position: relative;
+    text-align: center;
+    top: -1px;
+    width: 50px;
+    font-size: 45px;
+    font-size: 3.72625em;
+    font-weight: 700;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.45);
+    font-family: "Open Sans",Arial,Helvetica,sans-serif;
+}
+.incremental-counter .num::before {
+     background: #00aae6;
+     content: "";
+     display: block;
+     height: 1px;
+     left: -1px;
+     margin: -0.5px 0 0;
+     position: absolute;
+     right: -1px;
+     top: 50%;
+     width: auto;
+}

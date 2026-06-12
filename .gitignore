@@ -1,2 +1,51 @@
-*.pyc
+# Local config (real secrets live here, NOT in config_default.py)
 config.py
+config_default.py_remote
+.env
+.env.*
+secrets.conf
+
+# Python bytecode
+*.pyc
+*.pyo
+__pycache__/
+
+# Stale backups — historically littered the prod tree
+*.bak
+*.bak_*
+*.bkup_*
+*_orig
+*_orig.*
+*_old
+*_old.*
+*.swp
+*.swo
+*~
+
+# Old dated server.py copies (preserved for history reconstruction, not for prod)
+server.py_*
+
+# Databases and user data
+*.db
+database.db
+user.txt
+paiduser.txt
+jobdetails.txt
+webminal_audit.log
+*.log
+
+# Editor / IDE
+.idea/
+.vscode/
+project.geany
+project.geany_old
+.DS_Store
+
+# OS / build
+*.egg-info/
+build/
+dist/
+
+# Runtime/cache
+.cache/
+.pytest_cache/

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal — Team</title>
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff; --bg2: #f9f9f8; --bg3: #f3f3f1;
+    --text: #111111; --muted: #6b7280; --border: rgba(0,0,0,0.1);
+    --green-bg: #eaf3de; --green-txt: #3b6d11;
+    --blue-bg: #eff6ff; --blue-txt: #1e40af;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px; --radius-lg: 12px;
+  }
+
+  html, body { height: 100%; font-family: var(--font-sans); background: var(--bg2); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+  .flash-bar { padding: 10px 24px; font-size: 13px; text-align: center; }
+  .flash-bar.flash-warning { background: #fff3cd; color: #856404; }
+  .flash-bar.flash-error   { background: #f8d7da; color: #721c24; }
+  .flash-bar.flash-info, .flash-bar.flash-message { background: var(--green-bg); color: var(--green-txt); }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; border-bottom: 0.5px solid var(--border);
+    background: var(--bg); position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: var(--radius-md); transition: background 0.15s, color 0.15s; }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links a.active { background: var(--green-bg); color: var(--green-txt); }
+  .nav-links .nav-user { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--green-txt); font-weight: 500; padding: 5px 10px; border-radius: var(--radius-md); background: var(--green-bg); }
+  .nav-user-dot { width: 6px; height: 6px; border-radius: 50%; background: #00cc6a; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes shine { 0%{transform:translateX(-100%) rotate(45deg)} 100%{transform:translateX(100%) rotate(45deg)} }
+
+  .page { max-width: 700px; margin: 0 auto; padding: 32px 24px 64px; }
+  .page-title { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .page-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+  .section-title {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+    margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 10px;
+  }
+
+  .member { display: flex; gap: 16px; align-items: flex-start; }
+  .member-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--green-bg); color: var(--green-txt);
+    font-family: var(--font-mono); font-weight: 700; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; text-transform: uppercase;
+  }
+  .member-info h3 { font-family: var(--font-mono); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .member-info p { font-size: 14px; line-height: 1.6; color: var(--text); margin-bottom: 8px; }
+  .member-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .member-links a {
+    font-size: 12px; color: var(--green-txt); text-decoration: none;
+    padding: 3px 10px; border-radius: 20px; background: var(--green-bg);
+    transition: background 0.15s;
+  }
+  .member-links a:hover { background: #d4e8be; }
+
+  .fun-fact {
+    background: var(--blue-bg); border-radius: var(--radius-md);
+    padding: 14px 18px; font-size: 13px; line-height: 1.6; color: var(--blue-txt);
+    margin-top: 16px;
+  }
+  .fun-fact strong { font-weight: 600; }
+  .fun-fact code { font-family: var(--font-mono); font-size: 12px; background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; }
+
+  .thanks { font-size: 14px; color: var(--muted); margin-top: 16px; }
+
+  .contact-box { font-size: 14px; line-height: 1.7; }
+  .contact-box a { color: var(--green-txt); text-decoration: underline; }
+  .contact-email {
+    display: inline-block; font-family: var(--font-mono); font-size: 13px;
+    background: var(--bg3); padding: 4px 12px; border-radius: var(--radius-md); margin: 6px 0;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    nav { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+    .nav-links { gap: 2px; flex-wrap: wrap; }
+    .nav-links a { font-size: 12px; padding: 4px 8px; }
+    .nav-hide { display: none; }
+    .page { padding: 24px 16px 48px; }
+    .page-title { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+{% for category, message in get_flashed_messages(with_categories=true) %}
+  <div class="flash-bar flash-{{ category }}">{{ message }}</div>
+{% endfor %}
+
+<nav>
+  <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+  <div class="nav-links">
+    {% if 'user' in session %}
+      <a href="{{ url_for('terminal') }}">Terminal</a>
+      <a href="/lab/">Lab</a>
+      <a href="/golf/">Golf</a>
+    {% endif %}
+    <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer">Forum</a>
+    <a href="{{ url_for('faq') }}">FAQ</a>
+    <a href="{{ url_for('contact') }}" class="active">Team</a>
+    <a href="{{ url_for('about') }}" class="nav-hide">About</a>
+    {% if 'user' not in session %}
+      <a href="{{ url_for('register') }}">Register</a>
+      <a href="{{ url_for('login') }}">Log in</a>
+    {% else %}
+      <a href="{{ url_for('settings') }}">Profile</a>
+      <a href="{{ url_for('logout') }}">Log out</a>
+      <div class="nav-user"><div class="nav-user-dot"></div>{{ session['username'] }}</div>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- LIVE TICKER -->
+<section style="border-bottom: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; height: 32px; background: #0d0f14; display: flex; align-items: center; padding: 0;">
+  <a href="/live/" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #00cc6a; padding: 0 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; text-decoration: none; border-right: 1px solid rgba(255,255,255,0.06); height: 100%;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00cc6a;animation:pulse 2s infinite;"></span>live</a>
+  <div style="flex:1; overflow: hidden; position: relative; height: 100%;">
+    <div id="live-ticker" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b7280; white-space: nowrap; position: absolute; display: flex; gap: 32px; align-items: center; height: 100%; will-change: transform;"></div>
+  </div>
+</section>
+
+<div class="page">
+  <h1 class="page-title">Meet the Team</h1>
+  <p class="page-subtitle">The people behind Webminal.</p>
+
+  <div class="section-title">Team</div>
+
+  <div class="card">
+    <div class="member">
+      <div class="member-avatar">LP</div>
+      <div class="member-info">
+        <h3>Lakshmipathi</h3>
+        <p>Open source programmer, fell in love with GNU/Linux in 2003 and the spark is still there. From ideation to implementation — the creator of this platform.</p>
+        <div class="member-links">
+          <a href="https://neverbreak.ai" style="background: linear-gradient(135deg, #3b6d11, #00cc6a); color: #fff; border: none; position: relative; overflow: hidden;"><span style="position:relative;z-index:1;">neverbreak.ai</span><span style="position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%);animation:shine 3s infinite;"></span></a>
+          <a href="https://patchwork.kernel.org/project/linux-btrfs/list/?submitter=144071&param=delegate&order=name&archive=both">Kernel patches</a>
+          <a href="https://gitlab.com/giis/distroQA/">distroQA</a>
+          <a href="https://play.google.com/store/apps/developer?id=giis">Android apps</a>
+          <a href="http://giis.co.in">giis</a>
+          <a href="https://github.com/Lakshmipathi">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="member">
+      <div class="member-avatar">Fr</div>
+      <div class="member-info">
+        <h3>Freston</h3>
+        <p>Linux system engineer. Long-time Slackware lover. He likes privacy. Without Freston, the project would have remained at the idea stage.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="fun-fact">
+    <strong>Fun fact:</strong> Lakshmipathi is from India and Freston from the Netherlands. They met on LinuxForums.org. Until 2015, they never saw each other face to face — not even via Skype. Communication typically took place over SSH into their server, using <code>write</code> in a <code>screen</code> session.
+  </div>
+
+  <p class="thanks">Thanks to past contributors Elija and Blender3d.</p>
+
+  <div class="section-title">Contact Us</div>
+
+  <div class="card contact-box">
+    <p>Please read our <a href="{{ url_for('faq') }}">FAQ</a> first. If they didn't help, reach out:</p>
+    <p style="margin-top: 10px;">
+      <a href="http://discuss.webminal.org/c/webminal-support">Webminal Support Forum</a> (recommended)
+    </p>
+    <p style="margin-top: 8px;">
+      Or email us at <span class="contact-email">efgadmin AT webminal DOT org</span>
+    </p>
+    <p style="margin-top: 10px; color: var(--muted); font-size: 13px;">We aim to reply within 24 hours. Your email address will not be shared with anyone.</p>
+  </div>
+</div>
+
+<script>
+(function() {
+  var ticker = document.getElementById('live-ticker');
+  if (!ticker) return;
+  function buildTicker(cmds) { ticker.innerHTML = ''; var allCmds = cmds.concat(cmds); for (var i = 0; i < allCmds.length; i++) { var span = document.createElement('span'); span.textContent = allCmds[i]; span.style.color = '#c8d3f5'; ticker.appendChild(span); var dot = document.createElement('span'); dot.textContent = '\u00b7'; dot.style.color = '#6b7280'; dot.style.margin = '0 8px'; ticker.appendChild(dot); } }
+  function startScroll() { var pos = 0, halfWidth = ticker.scrollWidth / 2; if (halfWidth === 0) return; function step() { pos -= 0.5; if (Math.abs(pos) >= halfWidth) pos = 0; ticker.style.transform = 'translateX(' + pos + 'px)'; requestAnimationFrame(step); } step(); }
+  function fetchAndScroll() { var xhr = new XMLHttpRequest(); xhr.open('GET', '/api/live/?t=' + Date.now()); xhr.onload = function() { if (xhr.status === 200 && xhr.responseText.trim()) { var cmds = xhr.responseText.trim().split('\n'); if (cmds.length > 0) { buildTicker(cmds); startScroll(); } } }; xhr.send(); }
+  fetchAndScroll(); setInterval(fetchAndScroll, 15000);
+})();
+</script>
+
+</body>
+</html>
