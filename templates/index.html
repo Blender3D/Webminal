@@ -1,9 +1,826 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal — Free GNU/Linux Online Terminal</title>
+<meta name="description" content="Practice Linux commands, write bash scripts, and learn system administration — free, in your browser. No install required. Running since 2011 with 500k users.">
 
-{% block title %}Webminal{% endblock title %}
+<!-- Open Graph / Social -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Webminal — Free Linux Terminal in Your Browser">
+<meta property="og:description" content="Practice Linux commands, bash scripting, and sysadmin skills — free, no install. 500k users since 2011.">
+<meta property="og:url" content="https://www.webminal.org">
+<meta property="og:site_name" content="Webminal">
 
-{% block body %}
-  <h2>Welcome to Webminal, the GNU/Linux Online Terminal</h2>
-  
-  {{ lipsum(20) }}
-{% endblock body %}
+<!-- Twitter -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Webminal — Free Linux Terminal in Your Browser">
+<meta name="twitter:description" content="Practice Linux commands, bash scripting, and sysadmin skills — free, no install. 500k users since 2011.">
+
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #ffffff;
+    --bg2:       #f9f9f8;
+    --bg3:       #f3f3f1;
+    --text:      #111111;
+    --muted:     #6b7280;
+    --border:    rgba(0,0,0,0.1);
+    --green-bg:  #eaf3de;
+    --green-txt: #3b6d11;
+    --term-bg:   #0d0f14;
+    --term-g:    #00cc6a;
+    --term-w:    #c8d3f5;
+    --term-m:    #6b7280;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* FLASH MESSAGES */
+  .flash-bar {
+    padding: 10px 48px;
+    font-size: 13px;
+    text-align: center;
+  }
+  .flash-bar.flash-warning { background: #fff3cd; color: #856404; }
+  .flash-bar.flash-error   { background: #f8d7da; color: #721c24; }
+  .flash-bar.flash-info, .flash-bar.flash-message { background: var(--green-bg); color: var(--green-txt); }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 48px;
+    border-bottom: 0.5px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 50;
+  }
+  .logo {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links .nav-cta {
+    color: var(--green-txt);
+    font-weight: 500;
+    background: var(--green-bg);
+  }
+  .nav-links .nav-cta:hover { background: #d3e8b8; }
+
+  /* HERO */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 340px;
+    border-bottom: 0.5px solid var(--border);
+    margin-top: 12px;
+  }
+  .hero-left {
+    padding: 56px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+    border-right: 0.5px solid var(--border);
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+  }
+  .hero-h1 {
+    font-size: 38px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+  }
+  .hero-h1 em {
+    font-style: normal;
+    text-decoration: underline;
+    text-decoration-color: var(--green-txt);
+    text-underline-offset: 6px;
+    text-decoration-thickness: 2px;
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 400px;
+  }
+  .hero-btns { display: flex; gap: 10px; margin-top: 4px; }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    padding: 10px 22px;
+    border-radius: var(--radius-md);
+    background: var(--green-bg);
+    color: var(--green-txt);
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .btn-primary:hover { background: #d3e8b8; transform: translateY(-1px); }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    font-size: 13px;
+    font-family: var(--font-sans);
+    padding: 10px 22px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--muted);
+    border: 0.5px solid var(--border);
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-secondary:hover { border-color: rgba(0,0,0,0.3); color: var(--text); }
+
+  /* TERMINAL */
+  .hero-right {
+    background: var(--bg2);
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .hero-term {
+    background: var(--term-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--term-brd);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+  .hero-term-bar {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    background: #13161e;
+    border-bottom: 1px solid var(--term-brd);
+    gap: 7px;
+  }
+  .hero-term-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .hero-term-dot.red { background: #ff5f57; }
+  .hero-term-dot.yellow { background: #febc2e; }
+  .hero-term-dot.green { background: #28c840; }
+  .hero-term-title {
+    flex: 1; text-align: center;
+    font-family: var(--font-mono); font-size: 11px; color: var(--term-m);
+    margin-right: 40px;
+  }
+  .hero-term-body {
+    padding: 20px 24px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--term-m);
+    line-height: 2;
+  }
+  .t-g { color: var(--term-g); }
+  .t-w { color: var(--term-w); }
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--term-g);
+    vertical-align: middle;
+    margin-left: 1px;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* STATS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-bottom: 0.5px solid var(--border);
+  }
+  .stat {
+    padding: 28px 48px;
+    border-right: 0.5px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-num {
+    font-family: var(--font-mono);
+    font-size: 30px;
+    font-weight: 500;
+    color: var(--green-txt);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label { font-size: 13px; color: var(--muted); }
+
+  /* SECTIONS */
+  .section {
+    padding: 48px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .section-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    margin-bottom: 24px;
+  }
+
+  /* FEATURE CARDS */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .card {
+    padding: 22px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .card:hover {
+    border-color: rgba(59,109,17,0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  /* CAROUSEL */
+  .carousel-wrap { position: relative; overflow: hidden; }
+  .carousel-track { display: flex; transition: transform 0.4s ease; }
+  .carousel-slide { min-width: 100%; flex-shrink: 0; }
+  .carousel-title {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    text-align: center; margin-bottom: 16px; color: var(--text);
+  }
+  .carousel-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .carousel-side {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    border: 0.5px solid var(--border); border-radius: var(--radius-lg);
+    padding: 16px; background: var(--bg);
+  }
+  .carousel-label {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.5px; padding: 3px 10px; border-radius: 20px;
+  }
+  .cl-win { background: #fef2f2; color: #991b1b; }
+  .cl-lin { background: var(--green-bg); color: var(--green-txt); }
+  .carousel-side img { width: 100%; max-width: 320px; height: auto; border-radius: var(--radius-md); }
+  .cterm { max-width: 320px; }
+  .carousel-nav {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin-top: 20px;
+  }
+  .carousel-btn {
+    font-size: 16px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 6px 14px; cursor: pointer;
+    color: var(--muted); transition: background 0.15s, color 0.15s;
+  }
+  .carousel-btn:hover { background: var(--bg3); color: var(--text); }
+  .carousel-dots { display: flex; gap: 6px; }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); transition: background 0.2s;
+  }
+  .dot.active { background: var(--green-txt); }
+
+  /* TERMINAL ANIM */
+  .cterm {
+    width: 100%; background: #0d0f14; border-radius: var(--radius-md);
+    padding: 14px 16px; min-height: 160px;
+    font-family: var(--font-mono); font-size: 12px; line-height: 1.8; color: #6b7280;
+  }
+  .cl { display: none; }
+  .cl.visible { display: block; }
+  .cp { color: #00cc6a; }
+  .cc { color: #c8d3f5; }
+  .co { color: #6b7280; }
+  .ccur {
+    display: inline-block; width: 7px; height: 12px;
+    background: #00cc6a; vertical-align: middle; margin-left: 1px;
+    animation: blink 1s step-end infinite;
+  }
+
+  /* FOOTER */
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 48px;
+    background: var(--bg2);
+  }
+  .footer-logo {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .footer-links { display: flex; gap: 28px; }
+  .footer-links a {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .footer-links a:hover { color: var(--text); }
+
+  /* RESPONSIVE */
+  @media (max-width: 960px) {
+    nav, .section, footer { padding-left: 24px; padding-right: 24px; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-left { padding: 36px 24px; border-right: none; border-bottom: 0.5px solid var(--border); }
+    .hero-right { min-height: 220px; padding: 24px; }
+    .hero-h1 { font-size: 30px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .stat { padding: 20px 24px; }
+    .stat:nth-child(2) { border-right: none; }
+    .stat:nth-child(3) { border-top: 0.5px solid var(--border); }
+    .stat:nth-child(4) { border-top: 0.5px solid var(--border); border-right: none; }
+    .cards-grid { grid-template-columns: 1fr 1fr; }
+    footer { flex-direction: column; gap: 16px; padding: 20px 24px; }
+    .flash-bar { padding-left: 24px; padding-right: 24px; }
+  }
+  @media (max-width: 700px) {
+    .carousel-pair { grid-template-columns: 1fr; }
+    .cterm { font-size: 11px; min-height: 130px; }
+  }
+  @media (max-width: 560px) {
+    .cards-grid { grid-template-columns: 1fr; }
+    .hero-btns { flex-direction: column; }
+    .nav-hide { display: none; }
+  }
+</style>
+</head>
+<body>
+
+{% for category, message in get_flashed_messages(with_categories=true) %}
+  <div class="flash-bar flash-{{ category }}">{{ message }}</div>
+{% endfor %}
+
+<nav>
+  <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+  <div class="nav-links">
+    {% if 'user' in session %}
+      <a href="{{ url_for('terminal') }}" class="nav-hide">Terminal</a>
+      <a href="/lab/" class="nav-hide">Lab</a>
+      <a href="/golf/" class="nav-hide">Golf</a>
+      <a href="{{ url_for('settings') }}" class="nav-hide">Profile</a>
+    {% endif %}
+    <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer" class="nav-hide">Forum</a>
+    <a href="{{ url_for('faq') }}" class="nav-hide">FAQ</a>
+    {% if 'user' not in session %}
+      <a href="{{ url_for('login') }}">Log in</a>
+      <a href="{{ url_for('register') }}" class="nav-cta">Register &rarr;</a>
+    {% else %}
+      <a href="{{ url_for('logout') }}">Log out</a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- LIVE TICKER -->
+<section style="border-bottom: 0.5px solid var(--border); overflow: hidden; height: 32px; background: var(--term-bg); display: flex; align-items: center; padding: 0;">
+  <a href="/live/" style="font-family: var(--font-mono); font-size: 11px; color: var(--term-g); padding: 0 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; text-decoration: none; border-right: 1px solid rgba(255,255,255,0.06); height: 100%;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00cc6a;animation:pulse 2s infinite;"></span>live</a>
+  <div style="flex:1; overflow: hidden; position: relative; height: 100%;">
+    <div id="live-ticker" style="font-family: var(--font-mono); font-size: 12px; color: var(--term-m); white-space: nowrap; position: absolute; display: flex; gap: 32px; align-items: center; height: 100%; will-change: transform;"></div>
+  </div>
+</section>
+
+<section class="hero">
+  <div class="hero-left">
+    <div class="eyebrow">FREE &middot; BROWSER-BASED &middot; NO INSTALL</div>
+    <h1 class="hero-h1">The free GNU/Linux<br>terminal for <em>everyone</em></h1>
+    <p class="hero-sub">
+      Practice Linux commands, write bash scripts, learn Python and more —
+      right in your browser. No setup required.
+    </p>
+    <div class="hero-btns">
+      <a href="{{ url_for('terminal') }}" class="btn-primary">&#9654; Launch terminal</a>
+    </div>
+  </div>
+  <div class="hero-right" aria-label="Terminal preview">
+    <div class="hero-term">
+      <div class="hero-term-bar">
+        <span class="hero-term-dot red"></span>
+        <span class="hero-term-dot yellow"></span>
+        <span class="hero-term-dot green"></span>
+        <span class="hero-term-title">webminal — bash</span>
+      </div>
+      <div class="hero-term-body" id="terminal">
+        <div id="t-login">webminal.org login: <span class="t-w" id="t-user"></span><span class="cursor" id="cur1"></span></div>
+        <div id="t-pass" style="display:none">Password: <span class="t-w" id="t-dots"></span><span class="cursor" id="cur2"></span></div>
+        <div id="t-motd" style="display:none">&nbsp;</div>
+        <div id="t-motd2" style="display:none" class="t-g"># webminal.org =&gt; your linux ~ on the cloud #</div>
+        <div id="t-blank" style="display:none">&nbsp;</div>
+        <div id="t-cmd1" style="display:none"><span class="t-g">[you@webminal ~]$ </span><span class="t-w" id="t-echo"></span><span class="cursor" id="cur3"></span></div>
+        <div id="t-out1" style="display:none">Hello Linux world!</div>
+        <div id="t-cmd2" style="display:none"><span class="t-g">[you@webminal ~]$ </span><span class="t-w" id="t-pwd"></span><span class="cursor" id="cur4"></span></div>
+        <div id="t-out2" style="display:none">/home/you</div>
+        <div id="t-cmd3" style="display:none"><span class="t-g">[you@webminal ~]$ </span><span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function type(elId, text, speed) {
+      const el = document.getElementById(elId);
+      for (let i = 0; i < text.length; i++) {
+        el.textContent += text[i];
+        await sleep(speed || 90);
+      }
+    }
+
+    async function show(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    }
+
+    async function hide(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    }
+
+    async function run() {
+      await sleep(600);
+
+      await type('t-user', 'you', 110);
+      await sleep(400);
+      hide('cur1');
+
+      await show('t-pass');
+      await sleep(300);
+      var dots = document.getElementById('t-dots');
+      for (var i = 0; i < 8; i++) {
+        dots.textContent += '\u00b7';
+        await sleep(120);
+      }
+      await sleep(500);
+      hide('cur2');
+
+      await show('t-motd');
+      await sleep(200);
+      await show('t-motd2');
+      await show('t-blank');
+      await sleep(700);
+
+      await show('t-cmd1');
+      await type('t-echo', 'echo Hello Linux world!', 75);
+      await sleep(400);
+      hide('cur3');
+      await show('t-out1');
+      await sleep(300);
+
+      await show('t-cmd2');
+      await type('t-pwd', 'pwd', 100);
+      await sleep(400);
+      hide('cur4');
+      await show('t-out2');
+      await sleep(300);
+
+      await show('t-cmd3');
+    }
+
+    run();
+  })();
+  </script>
+</section>
+
+<section class="stats">
+  <div class="stat">
+    <div class="stat-num">{{ counter }}</div>
+    <div class="stat-label"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00cc6a;animation:pulse 2s infinite;vertical-align:middle;margin-right:4px;"></span>commands executed</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">2011</div>
+    <div class="stat-label">running since</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">500k+</div>
+    <div class="stat-label">users</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">2,700+</div>
+    <div class="stat-label">universities &amp; schools</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">free</div>
+    <div class="stat-label">always &amp; forever</div>
+  </div>
+</section>
+
+<section style="border-bottom: 0.5px solid var(--border); background: var(--bg3); padding: 24px 24px; text-align: center;">
+  <div style="font-size: 13px; color: var(--muted); margin-bottom: 14px; letter-spacing: 0.02em;">Used at 2,700+ institutions across 50+ countries</div>
+  <div style="font-family: var(--font-mono); font-size: 12px; color: #888; line-height: 2;">
+    Harvard · Stanford · MIT · Berkeley · Georgia Tech · NYU · Purdue · Penn State · Michigan · Texas A&amp;M · UCLA · Columbia · Brown · Johns Hopkins · Thapar · SRMIST · SNHU · Rutgers · U&nbsp;Minnesota · Syracuse · <span style="color: var(--green-txt);">2,700+ more</span>
+  </div>
+  <div style="margin-top: 12px; font-size: 16px; letter-spacing: 6px;">&#x1F1EE;&#x1F1F3; &#x1F1FA;&#x1F1F8; &#x1F1F8;&#x1F1E6; &#x1F1E6;&#x1F1FA; &#x1F1E8;&#x1F1F4; &#x1F1F2;&#x1F1FE; &#x1F1F5;&#x1F1F1; &#x1F1F2;&#x1F1FD; &#x1F1F9;&#x1F1FC; &#x1F1F5;&#x1F1F0; &#x1F1F5;&#x1F1ED; &#x1F1E7;&#x1F1E9; &#x1F1EC;&#x1F1E7; &#x1F1E8;&#x1F1E6; &#x1F1F0;&#x1F1F7;</div>
+</section>
+
+<section style="text-align: center; padding: 20px 24px; border-bottom: 0.5px solid var(--border); background: var(--bg);">
+  <div style="font-family: var(--font-mono); font-size: 13px; color: var(--green-txt); font-weight: 500;">
+    &#9971; Linux Command Golf
+  </div>
+  <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+    Solve challenges in the fewest commands. <a href="/golf/" style="color: var(--green-txt); text-decoration: none; font-weight: 500;">Play now &rarr;</a>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-eyebrow">// WHAT YOU CAN DO</div>
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-title">Real Linux terminal</div>
+      <div class="card-desc">A genuine bash shell running on Linux. Real commands, real output — not a simulation.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Guided lessons</div>
+      <div class="card-desc">Step-by-step from basic navigation to shell scripting, with live practice alongside each lesson.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Screencasts</div>
+      <div class="card-desc">Watch and follow along with video screencasts. Learn by seeing, then immediately doing.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Multi-language</div>
+      <div class="card-desc">Python, C, Ruby, Java, Rust — write and run code directly in the terminal.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">MySQL access</div>
+      <div class="card-desc">Create and query real databases. Practice SQL alongside your Linux skills.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Community</div>
+      <div class="card-desc">Forum, community chat, and 100k+ users to learn and collaborate with.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-bottom: 32px;">
+  <div class="section-eyebrow">// WINDOWS GUI vs LINUX TERMINAL</div>
+  <div class="carousel-wrap">
+    <div class="carousel-track" id="carousel-track">
+      <div class="carousel-slide">
+        <div class="carousel-title">Create a folder / directory</div>
+        <div class="carousel-pair">
+          <div class="carousel-side">
+            <span class="carousel-label cl-win">Windows</span>
+            <img src="{{ url_for('static', filename='gifs/create_folder.gif') }}" alt="Create folder in Windows" loading="lazy">
+          </div>
+          <div class="carousel-side">
+            <span class="carousel-label cl-lin">Linux</span>
+            <div class="cterm" id="cterm-0">
+              <div class="cl visible"><span class="cp">[you@webminal ~]$ </span><span class="cc" data-t="mkdir project"></span><span class="ccur"></span></div>
+              <div class="cl"><span class="cp">[you@webminal ~]$ </span><span class="cc" data-t="ls"></span></div>
+              <div class="cl"><span class="co">Desktop  Documents  project</span></div>
+              <div class="cl"><span class="cp">[you@webminal ~]$ </span><span class="ccur"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-slide">
+        <div class="carousel-title">Create a file inside a folder</div>
+        <div class="carousel-pair">
+          <div class="carousel-side">
+            <span class="carousel-label cl-win">Windows</span>
+            <img src="{{ url_for('static', filename='gifs/create_file_inside_folder.gif') }}" alt="Create file in Windows" loading="lazy">
+          </div>
+          <div class="carousel-side">
+            <span class="carousel-label cl-lin">Linux</span>
+            <div class="cterm" id="cterm-1">
+              <div class="cl visible"><span class="cp">[you@webminal ~]$ </span><span class="cc" data-t="cd project"></span><span class="ccur"></span></div>
+              <div class="cl"><span class="cp">[you@webminal project]$ </span><span class="cc" data-t="touch notes.txt"></span></div>
+              <div class="cl"><span class="cp">[you@webminal project]$ </span><span class="cc" data-t="ls"></span></div>
+              <div class="cl"><span class="co">notes.txt</span></div>
+              <div class="cl"><span class="cp">[you@webminal project]$ </span><span class="ccur"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-slide">
+        <div class="carousel-title">Rename a folder / directory</div>
+        <div class="carousel-pair">
+          <div class="carousel-side">
+            <span class="carousel-label cl-win">Windows</span>
+            <img src="{{ url_for('static', filename='gifs/rename_dir.gif') }}" alt="Rename folder in Windows" loading="lazy">
+          </div>
+          <div class="carousel-side">
+            <span class="carousel-label cl-lin">Linux</span>
+            <div class="cterm" id="cterm-2">
+              <div class="cl visible"><span class="cp">[you@webminal ~]$ </span><span class="cc" data-t="mv project myproject"></span><span class="ccur"></span></div>
+              <div class="cl"><span class="cp">[you@webminal ~]$ </span><span class="cc" data-t="ls"></span></div>
+              <div class="cl"><span class="co">Desktop  Documents  myproject</span></div>
+              <div class="cl"><span class="cp">[you@webminal ~]$ </span><span class="ccur"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-slide">
+        <div class="carousel-title">Create a compressed file</div>
+        <div class="carousel-pair">
+          <div class="carousel-side">
+            <span class="carousel-label cl-win">Windows</span>
+            <img src="{{ url_for('static', filename='gifs/zip_file.gif') }}" alt="Zip file in Windows" loading="lazy">
+          </div>
+          <div class="carousel-side">
+            <span class="carousel-label cl-lin">Linux</span>
+            <div class="cterm" id="cterm-3">
+              <div class="cl visible"><span class="cp">[you@webminal ~]$ </span><span class="cc" data-t="tar czf backup.tar.gz myproject/"></span><span class="ccur"></span></div>
+              <div class="cl"><span class="cp">[you@webminal ~]$ </span><span class="cc" data-t="ls -lh backup.tar.gz"></span></div>
+              <div class="cl"><span class="co">-rw-r--r-- 1 you you 2.4K  backup.tar.gz</span></div>
+              <div class="cl"><span class="cp">[you@webminal ~]$ </span><span class="ccur"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="carousel-nav">
+      <button class="carousel-btn" id="carousel-prev">&larr;</button>
+      <div class="carousel-dots" id="carousel-dots">
+        <span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </div>
+      <button class="carousel-btn" id="carousel-next">&rarr;</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">[webminal] — free since 2011</div>
+  <div class="footer-links">
+    <a href="{{ url_for('about') }}">About</a>
+    <a href="{{ url_for('contact') }}">Team</a>
+    <a href="{{ url_for('faq') }}">FAQ</a>
+    <a href="{{ url_for('contact') }}">Contact</a>
+    <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer">Forum</a>
+    <a href="https://github.com/sponsors/Lakshmipathi" target="_blank" rel="noopener noreferrer" style="color:var(--green-txt);">&#9829; Sponsor</a>
+  </div>
+</footer>
+
+<script>
+(function() {
+  var track = document.getElementById('carousel-track');
+  var dots = document.querySelectorAll('#carousel-dots .dot');
+  var total = 4;
+  var current = 0;
+  var autoTimer;
+
+  function goTo(idx) {
+    current = ((idx % total) + total) % total;
+    track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('active', i === current);
+    runCterm(current);
+  }
+
+  document.getElementById('carousel-prev').onclick = function() { goTo(current - 1); resetAuto(); };
+  document.getElementById('carousel-next').onclick = function() { goTo(current + 1); resetAuto(); };
+  for (var i = 0; i < dots.length; i++) {
+    (function(idx) { dots[idx].onclick = function() { goTo(idx); resetAuto(); }; })(i);
+  }
+
+  function resetAuto() { clearInterval(autoTimer); autoTimer = setInterval(function() { goTo(current + 1); }, 8000); }
+  autoTimer = setInterval(function() { goTo(current + 1); }, 8000);
+
+  // Terminal typing
+  function runCterm(idx) {
+    var box = document.getElementById('cterm-' + idx);
+    if (!box) return;
+    var lines = box.querySelectorAll('.cl');
+    for (var i = 0; i < lines.length; i++) {
+      lines[i].classList.remove('visible');
+      var c = lines[i].querySelector('.cc');
+      if (c) c.textContent = '';
+      var cur = lines[i].querySelector('.ccur');
+      if (cur) cur.style.display = '';
+    }
+    lines[0].classList.add('visible');
+    var li = 0;
+
+    function typeLine() {
+      var line = lines[li];
+      var cmd = line.querySelector('.cc');
+      var cur = line.querySelector('.ccur');
+      if (cmd && cmd.getAttribute('data-t')) {
+        var text = cmd.getAttribute('data-t');
+        var ci = 0;
+        function tc() {
+          if (ci < text.length) { cmd.textContent += text[ci]; ci++; setTimeout(tc, 45 + Math.random() * 35); }
+          else { if (cur) cur.style.display = 'none'; setTimeout(nl, 250); }
+        }
+        tc();
+      } else { setTimeout(nl, 150); }
+    }
+
+    function nl() {
+      li++;
+      if (li < lines.length) { lines[li].classList.add('visible'); typeLine(); }
+    }
+    typeLine();
+  }
+
+  // Run first one on load
+  setTimeout(function() { runCterm(0); }, 500);
+})();
+</script>
+
+<script>
+(function() {
+  var ticker = document.getElementById('live-ticker');
+  var speed = 50; // pixels per second
+  var animId;
+
+  function buildTicker(cmds) {
+    ticker.innerHTML = '';
+    // Duplicate commands to create seamless loop
+    var allCmds = cmds.concat(cmds);
+    for (var i = 0; i < allCmds.length; i++) {
+      var span = document.createElement('span');
+      span.textContent = allCmds[i];
+      span.style.color = '#c8d3f5';
+      ticker.appendChild(span);
+      // Separator dot
+      var dot = document.createElement('span');
+      dot.textContent = '\u00b7';
+      dot.style.color = '#6b7280';
+      dot.style.margin = '0 8px';
+      ticker.appendChild(dot);
+    }
+  }
+
+  function startScroll() {
+    var pos = 0;
+    var halfWidth = ticker.scrollWidth / 2;
+    if (halfWidth === 0) return;
+
+    function step() {
+      pos -= 0.5;
+      if (Math.abs(pos) >= halfWidth) pos = 0;
+      ticker.style.transform = 'translateX(' + pos + 'px)';
+      animId = requestAnimationFrame(step);
+    }
+    if (animId) cancelAnimationFrame(animId);
+    step();
+  }
+
+  function fetchAndScroll() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/live/?t=' + Date.now());
+    xhr.onload = function() {
+      if (xhr.status === 200 && xhr.responseText.trim()) {
+        var cmds = xhr.responseText.trim().split('\n');
+        if (cmds.length > 0) {
+          buildTicker(cmds);
+          startScroll();
+        }
+      }
+    };
+    xhr.send();
+  }
+
+  fetchAndScroll();
+  setInterval(fetchAndScroll, 15000);
+})();
+</script>
+
+</body>
+</html>

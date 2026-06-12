@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal — 502</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #f9f9f8; color: #111;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    background: #fff; border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 12px; padding: 40px 32px;
+    text-align: center; max-width: 420px; width: 100%;
+  }
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; font-weight: 500; color: #6b7280;
+    margin-bottom: 24px;
+  }
+  .code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 56px; font-weight: 700; color: #3b6d11;
+    line-height: 1; margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 18px; font-weight: 600; margin-bottom: 10px;
+  }
+  p {
+    font-size: 14px; color: #6b7280; line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .links a {
+    font-size: 13px; text-decoration: none; padding: 8px 18px;
+    border-radius: 8px; transition: background 0.15s;
+  }
+  .btn-primary {
+    background: #eaf3de; color: #3b6d11; font-weight: 500;
+  }
+  .btn-primary:hover { background: #d3e8b8; }
+  .btn-secondary {
+    background: transparent; color: #6b7280;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+  .btn-secondary:hover { background: #f3f3f1; color: #111; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">[webminal]</div>
+  <div class="code">502</div>
+  <h1>Bad gateway</h1>
+  <p>The server is temporarily unavailable. Please try again shortly.</p>
+  <div class="links">
+    <a href="/" class="btn-primary">Back to home</a>
+    <a href="https://community.webminal.org" class="btn-secondary">Community forum</a>
+  </div>
+</div>
+</body>
+</html>

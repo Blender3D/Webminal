@@ -1,0 +1,15 @@
+{
+  "id": "sorter",
+  "title": "The Sorter",
+  "difficulty": "beginner",
+  "par": 1,
+  "description": "Sort ~/golf/names.txt alphabetically and remove duplicates. Save the result to ~/golf/result.txt",
+  "setup": "mkdir -p ~/golf && printf 'Charlie\\nAlice\\nBob\\nAlice\\nDave\\nBob\\nEve\\nCharlie\\n' > ~/golf/names.txt && rm -f ~/golf/result.txt",
+  "validate": "diff <(sort -u ~/golf/names.txt) ~/golf/result.txt >/dev/null 2>&1",
+  "hints": [
+    "The sort command can sort lines alphabetically",
+    "The -u flag removes duplicate lines",
+    "sort -u file > output"
+  ],
+  "category": "text_processing"
+}

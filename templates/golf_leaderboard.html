@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaderboard - Linux Command Golf - Webminal</title>
+<meta name="description" content="Top Linux golfers ranked by challenges solved and total strokes.">
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff; --bg2: #f9f9f8; --bg3: #f3f3f1;
+    --text: #111111; --muted: #6b7280; --border: rgba(0,0,0,0.1);
+    --green-bg: #eaf3de; --green-txt: #3b6d11;
+    --yellow-bg: #fef9e7; --yellow-txt: #92741a;
+    --red-bg: #fde8e8; --red-txt: #991b1b;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px; --radius-lg: 12px;
+  }
+
+  html, body { height: 100%; font-family: var(--font-sans); background: var(--bg2); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; border-bottom: 0.5px solid var(--border);
+    background: var(--bg); position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: var(--radius-md); transition: background 0.15s, color 0.15s; }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links a.active { background: var(--green-bg); color: var(--green-txt); }
+  .nav-links .nav-user { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--green-txt); font-weight: 500; padding: 5px 10px; border-radius: var(--radius-md); background: var(--green-bg); }
+  .nav-user-dot { width: 6px; height: 6px; border-radius: 50%; background: #00cc6a; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .page { max-width: 860px; margin: 0 auto; padding: 32px 24px 64px; }
+  .page-header { text-align: center; margin-bottom: 28px; }
+  .page-title { font-family: var(--font-mono); font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  .page-subtitle { font-size: 14px; color: var(--muted); }
+  .back-link { font-size: 13px; color: var(--muted); text-decoration: none; display: inline-block; margin-bottom: 16px; }
+  .back-link:hover { color: var(--text); }
+
+  .filters { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+  .filter-btn {
+    font-family: var(--font-mono); font-size: 12px; padding: 5px 14px;
+    border-radius: 999px; border: 1px solid var(--border); background: var(--bg);
+    color: var(--muted); cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--green-txt); color: var(--text); }
+  .filter-btn.active { background: var(--green-bg); color: var(--green-txt); border-color: var(--green-txt); }
+
+  .section { margin-bottom: 32px; }
+  .section-title { font-family: var(--font-mono); font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+
+  .tbl {
+    width: 100%; border-collapse: collapse;
+    background: var(--bg); border-radius: var(--radius-lg);
+    overflow: hidden; border: 0.5px solid var(--border);
+  }
+  .tbl th {
+    font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--muted); padding: 10px 16px;
+    text-align: left; background: var(--bg3); border-bottom: 0.5px solid var(--border);
+  }
+  .tbl th.r { text-align: right; }
+  .tbl td {
+    font-family: var(--font-mono); font-size: 13px; padding: 10px 16px;
+    border-bottom: 0.5px solid var(--border); color: var(--text);
+  }
+  .tbl td.r { text-align: right; }
+  .tbl td.muted { color: var(--muted); }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover { background: var(--bg2); }
+  .rank-col { color: var(--green-txt); font-weight: 600; width: 48px; }
+  .player-col { font-weight: 500; }
+  .par-under { color: var(--green-txt); }
+  .par-over { color: var(--red-txt); }
+  .par-even { color: var(--muted); }
+
+  .ch-card {
+    background: var(--bg); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 12px;
+  }
+  .ch-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ch-card-title { font-family: var(--font-mono); font-size: 14px; font-weight: 600; }
+  .ch-card-par { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .ch-card-par strong { color: var(--green-txt); }
+
+  .badge {
+    font-size: 11px; font-weight: 500; padding: 2px 8px;
+    border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-beginner { background: var(--green-bg); color: var(--green-txt); }
+  .badge-intermediate { background: var(--yellow-bg); color: var(--yellow-txt); }
+  .badge-advanced { background: var(--red-bg); color: var(--red-txt); }
+
+  .empty-msg { font-size: 12px; color: var(--muted); font-style: italic; }
+  .loading { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 640px) {
+    nav { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+    .nav-links { gap: 2px; flex-wrap: wrap; }
+    .nav-links a { font-size: 12px; padding: 4px 8px; }
+    .page { padding: 24px 16px 48px; }
+    .tbl th, .tbl td { padding: 8px 10px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+  <div class="nav-links">
+    {% if 'user' in session %}
+      <a href="{{ url_for('terminal') }}">Terminal</a>
+      <a href="/lab/">Lab</a>
+    {% endif %}
+    <a href="/golf/" class="active">Golf</a>
+    <a href="/live/">Live</a>
+    {% if 'user' not in session %}
+      <a href="{{ url_for('register') }}">Register</a>
+      <a href="{{ url_for('login') }}">Log in</a>
+    {% else %}
+      <a href="{{ url_for('logout') }}">Log out</a>
+      <div class="nav-user"><div class="nav-user-dot"></div>{{ session['username'] }}</div>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/golf/" class="back-link">&larr; Back to challenges</a>
+  <div class="page-header">
+    <h1 class="page-title">Leaderboard</h1>
+    <p class="page-subtitle">Top golfers across all challenges</p>
+  </div>
+
+  <div class="filters" id="filters"></div>
+
+  <div id="content">
+    <div class="loading">Loading leaderboard...</div>
+  </div>
+</div>
+
+<script>
+function escHtml(s) {
+  var d = document.createElement('div');
+  d.appendChild(document.createTextNode(s));
+  return d.innerHTML;
+}
+
+function fmtTime(s) {
+  s = parseInt(s, 10);
+  if (isNaN(s) || s <= 0) return '--';
+  if (s < 60) return s + 's';
+  var m = Math.floor(s / 60);
+  return m + 'm' + (s % 60 > 0 ? (s % 60) + 's' : '');
+}
+
+function parStr(diff) {
+  if (diff < 0) return '' + diff;
+  if (diff === 0) return 'E';
+  return '+' + diff;
+}
+
+function parClass(diff) {
+  if (diff < 0) return 'par-under';
+  if (diff === 0) return 'par-even';
+  return 'par-over';
+}
+
+(function() {
+  var content = document.getElementById('content');
+  var filtersEl = document.getElementById('filters');
+  var activeFilter = 'all';
+  var gData = null;
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/static/golf_scores.json?t=' + Date.now());
+  xhr.onload = function() {
+    if (xhr.status !== 200) {
+      content.innerHTML = '<div class="loading">Leaderboard coming soon.</div>';
+      return;
+    }
+    try { gData = JSON.parse(xhr.responseText); } catch(e) {
+      content.innerHTML = '<div class="loading">Error loading data.</div>';
+      return;
+    }
+    buildFilters();
+    render();
+  };
+  xhr.onerror = function() {
+    content.innerHTML = '<div class="loading">Could not load leaderboard.</div>';
+  };
+  xhr.send();
+
+  function buildFilters() {
+    var labels = ['all', 'beginner', 'intermediate', 'advanced'];
+    var html = '';
+    for (var i = 0; i < labels.length; i++) {
+      html += '<button class="filter-btn' + (labels[i] === activeFilter ? ' active' : '') + '" data-f="' + labels[i] + '">' + labels[i] + '</button>';
+    }
+    filtersEl.innerHTML = html;
+    filtersEl.onclick = function(e) {
+      if (e.target.classList.contains('filter-btn')) {
+        activeFilter = e.target.getAttribute('data-f');
+        buildFilters();
+        render();
+      }
+    };
+  }
+
+  function render() {
+    var challenges = gData.challenges || [];
+    var leaderboards = gData.leaderboards || {};
+
+    var filtered = [];
+    for (var i = 0; i < challenges.length; i++) {
+      if (activeFilter === 'all' || challenges[i].difficulty === activeFilter) {
+        filtered.push(challenges[i]);
+      }
+    }
+
+    // Aggregate per player
+    var players = {};
+    for (var i = 0; i < filtered.length; i++) {
+      var c = filtered[i];
+      var lb = leaderboards[c.id] || [];
+      for (var j = 0; j < lb.length; j++) {
+        var e = lb[j];
+        var n = e.nickname;
+        if (!players[n]) players[n] = { solved: 0, strokes: 0, par: 0, time: 0 };
+        players[n].solved++;
+        players[n].strokes += e.strokes;
+        players[n].par += c.par;
+        players[n].time += e.time || 0;
+      }
+    }
+
+    var sorted = [];
+    for (var n in players) {
+      if (players.hasOwnProperty(n)) sorted.push({ name: n, d: players[n] });
+    }
+    sorted.sort(function(a, b) {
+      if (b.d.solved !== a.d.solved) return b.d.solved - a.d.solved;
+      if (a.d.strokes !== b.d.strokes) return a.d.strokes - b.d.strokes;
+      return a.d.time - b.d.time;
+    });
+
+    var html = '';
+
+    // Overall standings
+    if (sorted.length > 0) {
+      html += '<div class="section">';
+      html += '<div class="section-title">Overall' + (activeFilter !== 'all' ? ' - ' + activeFilter : '') + '</div>';
+      html += '<table class="tbl"><thead><tr>' +
+        '<th title="Overall rank">#</th>' +
+        '<th title="Player name">Player</th>' +
+        '<th class="r" title="Challenges completed">Solved</th>' +
+        '<th class="r" title="Total commands used">Strokes</th>' +
+        '<th class="r" title="Total strokes minus total par">vs Par</th>' +
+        '<th class="r" title="Total time across all challenges">Time</th>' +
+        '</tr></thead><tbody>';
+      for (var i = 0; i < sorted.length; i++) {
+        var p = sorted[i];
+        var diff = p.d.strokes - p.d.par;
+        html += '<tr>' +
+          '<td class="rank-col">' + (i + 1) + '</td>' +
+          '<td class="player-col">' + escHtml(p.name) + '</td>' +
+          '<td class="r">' + p.d.solved + '/' + filtered.length + '</td>' +
+          '<td class="r">' + p.d.strokes + ' cmd</td>' +
+          '<td class="r ' + parClass(diff) + '" title="' + (diff < 0 ? diff + ' under par' : diff === 0 ? 'Even par' : '+' + diff + ' over par') + '">' + parStr(diff) + '</td>' +
+          '<td class="r muted">' + fmtTime(p.d.time) + '</td>' +
+          '</tr>';
+      }
+      html += '</tbody></table></div>';
+    } else {
+      html += '<div class="loading">No scores yet. Be the first to play!</div>';
+    }
+
+    // Per-challenge
+    html += '<div class="section"><div class="section-title">By challenge</div>';
+    for (var i = 0; i < filtered.length; i++) {
+      var c = filtered[i];
+      var lb = leaderboards[c.id] || [];
+
+      html += '<div class="ch-card"><div class="ch-card-header">' +
+        '<div><span class="ch-card-title">' + escHtml(c.title) + '</span> <span class="badge badge-' + c.difficulty + '">' + c.difficulty + '</span></div>' +
+        '<span class="ch-card-par">par <strong>' + c.par + '</strong></span></div>';
+
+      if (lb.length > 0) {
+        html += '<table class="tbl"><thead><tr>' +
+          '<th title="Rank">#</th><th title="Player">Player</th>' +
+          '<th class="r" title="Commands used">Strokes</th>' +
+          '<th class="r" title="Strokes minus par">vs Par</th>' +
+          '<th class="r" title="Time to solve">Time</th>' +
+          '</tr></thead><tbody>';
+        for (var j = 0; j < lb.length; j++) {
+          var s = lb[j];
+          var diff = s.strokes - c.par;
+          html += '<tr>' +
+            '<td class="rank-col">' + s.rank + '</td>' +
+            '<td class="player-col">' + escHtml(s.nickname) + '</td>' +
+            '<td class="r">' + s.strokes + ' cmd</td>' +
+            '<td class="r ' + parClass(diff) + '">' + parStr(diff) + '</td>' +
+            '<td class="r muted">' + fmtTime(s.time) + '</td>' +
+            '</tr>';
+        }
+        html += '</tbody></table>';
+      } else {
+        html += '<span class="empty-msg">No scores yet</span>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+
+    content.innerHTML = html;
+  }
+})();
+</script>
+
+</body>
+</html>

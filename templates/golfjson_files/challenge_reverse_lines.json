@@ -1,0 +1,15 @@
+{
+  "id": "reverse_lines",
+  "title": "The Reverser",
+  "difficulty": "beginner",
+  "par": 1,
+  "description": "Reverse the order of lines in ~/golf/forward.txt and save to ~/golf/backward.txt (last line becomes first)",
+  "setup": "mkdir -p ~/golf && printf 'First\\nSecond\\nThird\\nFourth\\nFifth\\n' > ~/golf/forward.txt && rm -f ~/golf/backward.txt",
+  "validate": "diff <(tac ~/golf/forward.txt) ~/golf/backward.txt >/dev/null 2>&1",
+  "hints": [
+    "There is a command that is 'cat' backwards",
+    "tac reverses line order",
+    "tac file > output"
+  ],
+  "category": "text_processing"
+}

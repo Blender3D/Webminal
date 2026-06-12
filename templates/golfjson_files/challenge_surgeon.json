@@ -1,0 +1,15 @@
+{
+  "id": "surgeon",
+  "title": "The Surgeon",
+  "difficulty": "advanced",
+  "par": 2,
+  "description": "Replace every occurrence of 'localhost' with '192.168.1.100' in all .conf files under ~/golf/configs/",
+  "setup": "rm -rf ~/golf/configs && mkdir -p ~/golf/configs && printf 'server=localhost\\nport=8080\\ndb_host=localhost\\n' > ~/golf/configs/app.conf && printf 'bind=localhost\\nbackend=localhost:3000\\n' > ~/golf/configs/proxy.conf && printf 'redis_host=localhost\\nredis_port=6379\\n' > ~/golf/configs/cache.conf",
+  "validate": "! grep -r 'localhost' ~/golf/configs/ >/dev/null 2>&1 && grep -q '192.168.1.100' ~/golf/configs/app.conf && grep -q '192.168.1.100' ~/golf/configs/proxy.conf && grep -q '192.168.1.100' ~/golf/configs/cache.conf",
+  "hints": [
+    "sed can do find-and-replace with the s command",
+    "The -i flag edits files in place",
+    "sed -i 's/old/new/g' can take multiple files or wildcards"
+  ],
+  "category": "text_processing"
+}

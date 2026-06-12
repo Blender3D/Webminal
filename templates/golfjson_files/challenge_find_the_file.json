@@ -1,0 +1,15 @@
+{
+  "id": "find_the_file",
+  "title": "The Detective",
+  "difficulty": "intermediate",
+  "par": 2,
+  "description": "Somewhere under ~/golf/haystack/ there is a hidden file called .needle — find it and copy it to ~/golf/found.txt",
+  "setup": "rm -rf ~/golf/haystack ~/golf/found.txt && mkdir -p ~/golf/haystack/a/b/c ~/golf/haystack/d/e ~/golf/haystack/f/g/h/i && echo 'You found the needle!' > ~/golf/haystack/f/g/h/i/.needle",
+  "validate": "test \"$(cat ~/golf/found.txt 2>/dev/null)\" = 'You found the needle!'",
+  "hints": [
+    "The find command can search for files by name",
+    "find ~/golf/haystack -name '.needle'",
+    "Combine find with cp, or use find -exec"
+  ],
+  "category": "file_management"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "line_count",
+  "title": "The Counter",
+  "difficulty": "beginner",
+  "par": 1,
+  "description": "Count the number of lines in ~/golf/data.txt and write just the number to ~/golf/count.txt",
+  "setup": "mkdir -p ~/golf && seq 1 42 | shuf | head -37 > ~/golf/data.txt && rm -f ~/golf/count.txt",
+  "validate": "test \"$(cat ~/golf/count.txt 2>/dev/null | tr -d '[:space:]')\" = \"$(wc -l < ~/golf/data.txt | tr -d '[:space:]')\"",
+  "hints": [
+    "wc counts words, lines, and characters",
+    "wc -l counts lines, but it includes the filename",
+    "Use input redirection: wc -l < file"
+  ],
+  "category": "text_processing"
+}

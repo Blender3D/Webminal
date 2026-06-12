@@ -42,7 +42,7 @@ p {
 }
 
 #terminal {
-  background-color: #323232;
+  background-color: #000000;
 }
 
 code, pre {
@@ -87,10 +87,18 @@ header .logo {
 }
 
 .container {
-  width: 740px;
+  width: 1024px;
   margin: 40px auto;
   
   text-align: justify;
+}
+.cr2 {
+    height: 50px;
+    position:absolute;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+  
 }
 
 header .nav {
@@ -189,11 +197,9 @@ form .form-error input {
 }
 
 
-
 body.terminal {
   padding-left: 750px;
 }
-
 body.terminal h1, body.terminal .bracket {
   font-size: 48px;
 }
@@ -213,14 +219,22 @@ body.terminal pre {
 }
 
 
-
 #terminal {
   position: fixed;
   
   left: 0px;
   top: 0px;
   bottom: 0px;
-  right: 420px;
+  right: 570px;
+}
+
+#terminal_ide  {
+  position: absolute;
+  
+  left: 0px;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
 }
 
 #terminal iframe {
@@ -237,8 +251,9 @@ body.terminal pre {
   top: 0px;
   bottom: 0px;
   
-  width: 400px;
-  border-left: 25px solid #323232;
+  width: 550px;
+  border-left: 5px solid #000000;
+  overflow-y: scroll;
 }
 
 #overlay {
@@ -343,7 +358,7 @@ input, textarea {
 input[type="text"], input[type="password"], textarea, select {
   display: inline-block;
   width: 210px;
-  height: 18px;
+  height: auto;
   padding: 4px;
   font-size: 13px;
   line-height: 18px;
@@ -387,3 +402,116 @@ label {
 ::-webkit-scrollbar-track {
   background-color: white;
 }
+
+.col
+{
+ float: left;
+ width: 25%;
+}
+
+.last{
+ float: right;
+ width: 25%;
+}
+.row{
+ border: 1px solid green; 
+ height: auto;
+ overflow: auto;
+}
+
+
+#faqbox {
+    display: none;
+}
+
+#faqbox:target {
+    display: block;
+}
+#faqbox4c {
+    display: none;
+}
+
+#faqbox4c:target {
+    display: block;
+}
+
+.previewbox{
+    display: none;
+    width: 100%;
+}
+
+a:hover + .previewbox,.previewbox:hover{
+    display : block;
+    position: relative;
+    z-index: 100;
+}
+
+
+
+
+dl.faqToggle {}
+dl.faqToggle dt { color:#0054a6; cursor:pointer; margin:0 0 .25em 0; }
+dl.faqToggle dd {  }
+.faqToggleNumber { }
+.faqToggleQues { text-decoration:underline; }
+.faqToggleQuesPrefix { padding-right:3px; color:#FF6600 }
+.faqToggleAnsPrefix { padding-right:3px; color:green; }
+
+.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+
+    .youtube-player {
+        position: relative;
+        padding-bottom: 56.23%;
+        /* Use 75% for 4:3 videos */
+        height: 0;
+        overflow: hidden;
+        max-width: 100%;
+        background: #000;
+        margin: 5px;
+    }
+    
+    .youtube-player iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+        background: transparent;
+    }
+    
+    .youtube-player img {
+        bottom: 0;
+        display: block;
+        left: 0;
+        margin: auto;
+        max-width: 100%;
+        width: 100%;
+        position: absolute;
+        right: 0;
+        top: 0;
+        border: none;
+        height: auto;
+        cursor: pointer;
+        -webkit-transition: .4s all;
+        -moz-transition: .4s all;
+        transition: .4s all;
+    }
+    
+    .youtube-player img:hover {
+        -webkit-filter: brightness(75%);
+    }
+    
+    .youtube-player .play {
+        height: 72px;
+        width: 72px;
+        left: 50%;
+        top: 50%;
+        margin-left: -36px;
+        margin-top: -36px;
+        position: absolute;
+        cursor: pointer;
+    }
+
+

@@ -1,0 +1,15 @@
+{
+  "id": "merger",
+  "title": "The Merger",
+  "difficulty": "advanced",
+  "par": 3,
+  "description": "Merge ~/golf/list_a.txt and ~/golf/list_b.txt into ~/golf/merged.txt — the result should be sorted, with no duplicates",
+  "setup": "mkdir -p ~/golf && printf 'apple\\nbanana\\ncherry\\ndate\\n' > ~/golf/list_a.txt && printf 'banana\\ndate\\nfig\\ngrape\\n' > ~/golf/list_b.txt && rm -f ~/golf/merged.txt",
+  "validate": "diff <(sort -u ~/golf/list_a.txt ~/golf/list_b.txt) ~/golf/merged.txt >/dev/null 2>&1",
+  "hints": [
+    "sort can take multiple files as input",
+    "cat can concatenate files before piping to sort",
+    "sort -u handles both sorting and deduplication"
+  ],
+  "category": "text_processing"
+}

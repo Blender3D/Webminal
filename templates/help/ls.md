@@ -1,20 +1,25 @@
 title: ls
 
-# `ls`
+listed `dir1 dir2` as directory content right? Thats exactly what we wanted
 
-`ls` is a command to list files in a folder.
+	`dumb tutor: yes,the guy with blue-t-shirt,
+		   Yeah, you ,why you look so confused?`
+	`blue-t-shirt:I created 4 directories,
+                   where is the missing dir3,dir4?`
 
-To see what files are in your current folder, just run `ls`:
+Good question.They are created inside dir2 they won't be listed with 
+simple command like `ls`.you need to use "complex" command to view them. Try this:
 
-    $ ls
-    file1.txt
-    file2.txt
-    file3.png
-    folder4/
+	ls -R 
 
-For more verbose information (permissons, owner, group, filesize and name, in that order), append the `-l` flag:
+really "complex" isn't it  :P ,btw -R stands for recursive.
 
-    $ ls -l
-    drwxr--r--   1 fred  editors   4096  drafts
-    -rw-r--r--   1 fred  editors  30405  edition-32
-    -r-xr-xr-x   1 fred  fred      8460  edit
+Okay,we have created a new directories and listed them.Now lets 
+move into a new directory.
+
+	cd dir2
+
+
+
+
+

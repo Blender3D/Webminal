@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal — Live Commands</title>
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff; --bg2: #f9f9f8; --bg3: #f3f3f1;
+    --text: #111111; --muted: #6b7280; --border: rgba(0,0,0,0.1);
+    --green-bg: #eaf3de; --green-txt: #3b6d11;
+    --term-bg: #0d0f14; --term-g: #00cc6a; --term-w: #c8d3f5; --term-m: #6b7280;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px; --radius-lg: 12px;
+  }
+
+  html, body { height: 100%; font-family: var(--font-sans); background: var(--bg2); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; border-bottom: 0.5px solid var(--border);
+    background: var(--bg); position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: var(--radius-md); transition: background 0.15s, color 0.15s; }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links a.active { background: var(--green-bg); color: var(--green-txt); }
+  .nav-links .nav-user { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--green-txt); font-weight: 500; padding: 5px 10px; border-radius: var(--radius-md); background: var(--green-bg); }
+  .nav-user-dot { width: 6px; height: 6px; border-radius: 50%; background: #00cc6a; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .page { max-width: 700px; margin: 0 auto; padding: 32px 24px 64px; }
+  .page-header { text-align: center; margin-bottom: 28px; }
+  .page-title { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .page-subtitle { font-size: 14px; color: var(--muted); }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--term-g); animation: pulse 2s infinite; vertical-align: middle; margin-right: 6px; }
+
+  .terminal {
+    background: var(--term-bg); border-radius: var(--radius-lg);
+    padding: 20px 24px; min-height: 400px; overflow: hidden;
+    font-family: var(--font-mono); font-size: 13px; line-height: 2;
+  }
+  .cmd-line {
+    color: var(--term-m); opacity: 0;
+    animation: fadeIn 0.3s forwards;
+  }
+  .cmd-line .prompt { color: var(--term-g); }
+  .cmd-line .cmd { color: var(--term-w); }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .stats-bar {
+    display: flex; justify-content: center; gap: 32px;
+    margin-top: 24px; font-size: 13px; color: var(--muted);
+  }
+  .stats-bar strong { color: var(--green-txt); font-family: var(--font-mono); }
+
+  .cta { text-align: center; margin-top: 28px; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 500; font-family: var(--font-sans);
+    padding: 11px 24px; border-radius: var(--radius-md);
+    background: var(--green-bg); color: var(--green-txt);
+    border: none; cursor: pointer; text-decoration: none;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .btn-primary:hover { background: #d3e8b8; transform: translateY(-1px); }
+
+  @media (max-width: 640px) {
+    nav { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+    .nav-links { gap: 2px; flex-wrap: wrap; }
+    .nav-links a { font-size: 12px; padding: 4px 8px; }
+    .nav-hide { display: none; }
+    .terminal { font-size: 12px; padding: 16px; min-height: 300px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+  <div class="nav-links">
+    {% if 'user' in session %}
+      <a href="{{ url_for('terminal') }}">Terminal</a>
+      <a href="/lab/">Lab</a>
+      <a href="/golf/">Golf</a>
+    {% endif %}
+    <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer" class="nav-hide">Forum</a>
+    <a href="{{ url_for('faq') }}" class="nav-hide">FAQ</a>
+    {% if 'user' not in session %}
+      <a href="{{ url_for('register') }}">Register</a>
+      <a href="{{ url_for('login') }}">Log in</a>
+    {% else %}
+      <a href="{{ url_for('settings') }}" class="nav-hide">Profile</a>
+      <a href="{{ url_for('logout') }}">Log out</a>
+      <div class="nav-user"><div class="nav-user-dot"></div>{{ session['username'] }}</div>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- LIVE TICKER -->
+<section style="border-bottom: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; height: 32px; background: #0d0f14; display: flex; align-items: center; padding: 0;">
+  <a href="/live/" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #00cc6a; padding: 0 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; text-decoration: none; border-right: 1px solid rgba(255,255,255,0.06); height: 100%;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00cc6a;animation:pulse 2s infinite;"></span>live</a>
+  <div style="flex:1; overflow: hidden; position: relative; height: 100%;">
+    <div id="live-ticker" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b7280; white-space: nowrap; position: absolute; display: flex; gap: 32px; align-items: center; height: 100%; will-change: transform;"></div>
+  </div>
+</section>
+
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title"><span class="live-dot"></span> Live Commands</h1>
+    <p class="page-subtitle">Real commands being typed on Webminal right now. Anonymized, safe commands only.</p>
+  </div>
+
+  <div class="terminal" id="live-terminal">
+  </div>
+
+  <div class="stats-bar">
+    <span><strong>{{ counter }}</strong> total commands</span>
+    <span>since <strong>2011</strong></span>
+  </div>
+
+  <div class="cta">
+    <p style="font-size: 14px; color: var(--muted); margin-bottom: 12px;">Try it yourself — these are real commands on a real Linux terminal.</p>
+    <a href="{{ url_for('terminal') }}" class="btn-primary">&#9654; Launch terminal</a>
+  </div>
+</div>
+
+<script>
+(function() {
+  var terminal = document.getElementById('live-terminal');
+  var maxLines = 20;
+
+  function fetchAndDisplay() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/live/?t=' + Date.now());
+    xhr.onload = function() {
+      if (xhr.status === 200 && xhr.responseText.trim()) {
+        var cmds = xhr.responseText.trim().split('\n');
+        // Show new commands that aren't already displayed
+        var existing = terminal.querySelectorAll('.cmd-line');
+        var existingTexts = [];
+        for (var i = 0; i < existing.length; i++) {
+          existingTexts.push(existing[i].textContent);
+        }
+
+        for (var j = 0; j < cmds.length; j++) {
+          var cmdText = cmds[j].trim();
+          if (!cmdText) continue;
+
+          // Add new line
+          var line = document.createElement('div');
+          line.className = 'cmd-line';
+          line.innerHTML = '<span class="prompt">[user@webminal]</span> <span class="cmd">' + cmdText.replace(/^\$\s*/, '') + '</span>';
+          terminal.appendChild(line);
+        }
+
+        // Keep only last maxLines
+        var lines = terminal.querySelectorAll('.cmd-line');
+        while (lines.length > maxLines) {
+          terminal.removeChild(lines[0]);
+          lines = terminal.querySelectorAll('.cmd-line');
+        }
+      }
+    };
+    xhr.send();
+  }
+
+  // Poll every 5 seconds
+  fetchAndDisplay();
+  setInterval(fetchAndDisplay, 5000);
+})();
+</script>
+
+<script>
+(function() {
+  var ticker = document.getElementById('live-ticker');
+  if (!ticker) return;
+  function buildTicker(cmds) { ticker.innerHTML = ''; var allCmds = cmds.concat(cmds); for (var i = 0; i < allCmds.length; i++) { var span = document.createElement('span'); span.textContent = allCmds[i]; span.style.color = '#c8d3f5'; ticker.appendChild(span); var dot = document.createElement('span'); dot.textContent = '\u00b7'; dot.style.color = '#6b7280'; dot.style.margin = '0 8px'; ticker.appendChild(dot); } }
+  function startScroll() { var pos = 0, halfWidth = ticker.scrollWidth / 2; if (halfWidth === 0) return; function step() { pos -= 0.5; if (Math.abs(pos) >= halfWidth) pos = 0; ticker.style.transform = 'translateX(' + pos + 'px)'; requestAnimationFrame(step); } step(); }
+  function fetchAndScroll() { var xhr = new XMLHttpRequest(); xhr.open('GET', '/api/live/?t=' + Date.now()); xhr.onload = function() { if (xhr.status === 200 && xhr.responseText.trim()) { var cmds = xhr.responseText.trim().split('\n'); if (cmds.length > 0) { buildTicker(cmds); startScroll(); } } }; xhr.send(); }
+  fetchAndScroll(); setInterval(fetchAndScroll, 15000);
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "id": "process_hunter",
+  "title": "The Hunter",
+  "difficulty": "intermediate",
+  "par": 2,
+  "description": "A background sleep process is running. Find its PID and write it to ~/golf/target.txt",
+  "setup": "mkdir -p ~/golf && rm -f ~/golf/target.txt && (sleep 9999 &)",
+  "validate": "test -f ~/golf/target.txt && kill -0 $(cat ~/golf/target.txt 2>/dev/null) 2>/dev/null",
+  "hints": [
+    "ps or pgrep can find running processes",
+    "pgrep -f 'sleep 9999' finds the PID directly",
+    "Or use: ps aux | grep 'sleep 9999'"
+  ],
+  "category": "process_management"
+}

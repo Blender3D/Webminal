@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal — About</title>
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff; --bg2: #f9f9f8; --bg3: #f3f3f1;
+    --text: #111111; --muted: #6b7280; --border: rgba(0,0,0,0.1);
+    --green-bg: #eaf3de; --green-txt: #3b6d11;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px; --radius-lg: 12px;
+  }
+
+  html, body { height: 100%; font-family: var(--font-sans); background: var(--bg2); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+  .flash-bar { padding: 10px 24px; font-size: 13px; text-align: center; }
+  .flash-bar.flash-warning { background: #fff3cd; color: #856404; }
+  .flash-bar.flash-error   { background: #f8d7da; color: #721c24; }
+  .flash-bar.flash-info, .flash-bar.flash-message { background: var(--green-bg); color: var(--green-txt); }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; border-bottom: 0.5px solid var(--border);
+    background: var(--bg); position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: var(--radius-md); transition: background 0.15s, color 0.15s; }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links a.active { background: var(--green-bg); color: var(--green-txt); }
+  .nav-links .nav-user { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--green-txt); font-weight: 500; padding: 5px 10px; border-radius: var(--radius-md); background: var(--green-bg); }
+  .nav-user-dot { width: 6px; height: 6px; border-radius: 50%; background: #00cc6a; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .page { max-width: 700px; margin: 0 auto; padding: 32px 24px 64px; }
+  .page-title { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .page-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+  .section-title {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+    margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 10px;
+  }
+
+  .timeline { list-style: none; padding: 0; }
+  .timeline li {
+    display: flex; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.6;
+  }
+  .timeline li:last-child { border-bottom: none; }
+  .timeline .date {
+    font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+    white-space: nowrap; min-width: 90px; padding-top: 2px;
+  }
+  .timeline .event { flex: 1; }
+  .timeline a { color: var(--green-txt); text-decoration: underline; }
+
+  .tos { font-size: 14px; line-height: 1.7; }
+  .tos p { margin-bottom: 12px; }
+  .tos p:last-child { margin-bottom: 0; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    nav { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+    .nav-links { gap: 2px; flex-wrap: wrap; }
+    .nav-links a { font-size: 12px; padding: 4px 8px; }
+    .nav-hide { display: none; }
+    .page { padding: 24px 16px 48px; }
+    .page-title { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+{% for category, message in get_flashed_messages(with_categories=true) %}
+  <div class="flash-bar flash-{{ category }}">{{ message }}</div>
+{% endfor %}
+
+<nav>
+  <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+  <div class="nav-links">
+    {% if 'user' in session %}
+      <a href="{{ url_for('terminal') }}">Terminal</a>
+      <a href="/lab/">Lab</a>
+      <a href="/golf/">Golf</a>
+    {% endif %}
+    <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer">Forum</a>
+    <a href="{{ url_for('faq') }}">FAQ</a>
+    <a href="{{ url_for('contact') }}" class="nav-hide">Team</a>
+    <a href="{{ url_for('about') }}" class="active">About</a>
+    {% if 'user' not in session %}
+      <a href="{{ url_for('register') }}">Register</a>
+      <a href="{{ url_for('login') }}">Log in</a>
+    {% else %}
+      <a href="{{ url_for('settings') }}">Profile</a>
+      <a href="{{ url_for('logout') }}">Log out</a>
+      <div class="nav-user"><div class="nav-user-dot"></div>{{ session['username'] }}</div>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- LIVE TICKER -->
+<section style="border-bottom: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; height: 32px; background: #0d0f14; display: flex; align-items: center; padding: 0;">
+  <a href="/live/" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #00cc6a; padding: 0 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; text-decoration: none; border-right: 1px solid rgba(255,255,255,0.06); height: 100%;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00cc6a;animation:pulse 2s infinite;"></span>live</a>
+  <div style="flex:1; overflow: hidden; position: relative; height: 100%;">
+    <div id="live-ticker" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b7280; white-space: nowrap; position: absolute; display: flex; gap: 32px; align-items: center; height: 100%; will-change: transform;"></div>
+  </div>
+</section>
+
+<div class="page">
+  <h1 class="page-title">About Webminal</h1>
+  <p class="page-subtitle">News and updates.</p>
+
+  <div class="section-title">News &amp; Updates</div>
+
+  <div class="card">
+    <ul class="timeline">
+      <li><span class="date">2023-10-25</span><span class="event">Worst day in <a href="https://community.webminal.org/t/goodbye-my-great-father/8271">my life :-(</a></span></li>
+      <li><span class="date">2021-06-02</span><span class="event">Though there was some data loss, servers restored and site is up again!</span></li>
+      <li><span class="date">2021-03-10</span><span class="event">Server exploded due to fire incident. <a href="http://community.webminal.org/t/webminal-org-down-status-update-thread/1481">Details here.</a></span></li>
+      <li><span class="date">2019-06-16</span><span class="event">Finally HTTPS support added!</span></li>
+      <li><span class="date">2019-05-05</span><span class="event">New chat box added.</span></li>
+      <li><span class="date">2018-06-01</span><span class="event">Webminal.org crossed 100K users! Extremely delighted we contributed to the GNU/Linux world.</span></li>
+      <li><span class="date">2018-01-07</span><span class="event">Slight UX design change using FontAwesome.</span></li>
+      <li><span class="date">2017-11-20</span><span class="event">Launched new Webminal <a href="http://community.webminal.org">Forums</a>.</span></li>
+      <li><span class="date">2017-06-15</span><span class="event">Interesting command line stats <a href="http://www.webminal.org/fulc/">here</a>.</span></li>
+      <li><span class="date">2017-03-23</span><span class="event">Busy day thanks to the <a href="https://www.genbeta.com/linux/en-esta-web-puedes-aprender-gratis-todo-sobre-la-terminal-de-linux-y-de-forma-interactiva">Genbeta</a> community!</span></li>
+      <li><span class="date">2017-02-06</span><span class="event">Re-introduced Webminal Anywhere — learn using Webminal from other online resources!</span></li>
+      <li><span class="date">2016-01-10</span><span class="event">Thanks Ian Murdock. Your <a href="https://www.debian.org/News/2016/20160105">work</a> helped humanity.</span></li>
+      <li><span class="date">2015-11-24</span><span class="event">Distro page container time limit increased to 4 hours.</span></li>
+      <li><span class="date">2015-10-24</span><span class="event">Learn and share your screen sessions!</span></li>
+      <li><span class="date">2015-04-29</span><span class="event">Thanks Mihai Sucan, Firefox developer — <a href="http://incompleteness.me/blog/2015/02/09/console-dot-mihai/">inspiring story</a>.</span></li>
+      <li><span class="date">2015-03-03</span><span class="event">Launched the <a href="http://webminal.org/flexi">flexi plan</a>.</span></li>
+      <li><span class="date">2014-10-02</span><span class="event">Launched Distro feature — choose your favourite distro and practise root commands!</span></li>
+      <li><span class="date">2014-04-07</span><span class="event">Experimenting with root environment access!</span></li>
+      <li><span class="date">2013-08-01</span><span class="event">Interesting command line stats <a href="http://www.webminal.org/fulc/">here</a> and <a href="http://www.webminal.org/common_mistakes/">here</a>.</span></li>
+      <li><span class="date">2013-06-16</span><span class="event">Share files with other members via /common_pool.</span></li>
+      <li><span class="date">2013-04-13</span><span class="event">Learn or Practice MySQL Online available to all users!</span></li>
+      <li><span class="date">2013-04-07</span><span class="event">Webminal v0.3 released.</span></li>
+      <li><span class="date">2012-05-20</span><span class="event">Completely changed the layout — new technology under the hood.</span></li>
+      <li><span class="date">2011-03-20</span><span class="event">Webminal v0.1 goes live!</span></li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var ticker = document.getElementById('live-ticker');
+  if (!ticker) return;
+  function buildTicker(cmds) { ticker.innerHTML = ''; var allCmds = cmds.concat(cmds); for (var i = 0; i < allCmds.length; i++) { var span = document.createElement('span'); span.textContent = allCmds[i]; span.style.color = '#c8d3f5'; ticker.appendChild(span); var dot = document.createElement('span'); dot.textContent = '\u00b7'; dot.style.color = '#6b7280'; dot.style.margin = '0 8px'; ticker.appendChild(dot); } }
+  function startScroll() { var pos = 0, halfWidth = ticker.scrollWidth / 2; if (halfWidth === 0) return; function step() { pos -= 0.5; if (Math.abs(pos) >= halfWidth) pos = 0; ticker.style.transform = 'translateX(' + pos + 'px)'; requestAnimationFrame(step); } step(); }
+  function fetchAndScroll() { var xhr = new XMLHttpRequest(); xhr.open('GET', '/api/live/?t=' + Date.now()); xhr.onload = function() { if (xhr.status === 200 && xhr.responseText.trim()) { var cmds = xhr.responseText.trim().split('\n'); if (cmds.length > 0) { buildTicker(cmds); startScroll(); } } }; xhr.send(); }
+  fetchAndScroll(); setInterval(fetchAndScroll, 15000);
+})();
+</script>
+
+</body>
+</html>
