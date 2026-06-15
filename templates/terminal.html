@@ -215,6 +215,35 @@
     background: var(--term-bg);
   }
 
+  /* PASSWORD HINT */
+  .term-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--term-bg);
+    color: var(--term-g);
+    border-top: 0.5px solid rgba(0,204,106,0.25);
+    border-bottom: 0.5px solid rgba(0,204,106,0.25);
+    font-size: 12.5px;
+    line-height: 1.4;
+    padding: 7px 12px;
+  }
+  .term-hint .lock { flex: 0 0 auto; font-size: 13px; }
+  .term-hint .muted { color: var(--muted); }
+  .term-hint b { color: var(--term-g); }
+  .term-hint .term-hint-close {
+    flex: 0 0 auto;
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+  }
+  .term-hint .term-hint-close:hover { color: var(--term-g); }
+  .term-hint.hidden { display: none; }
   /* ── LESSON PANEL ── */
   .panel {
     background: var(--bg);
@@ -650,6 +679,11 @@
           <button class="term-action" onclick="togglePanel()">panel</button>
         </div>
       </div>
+      <div class="term-hint" id="term-hint">
+        <span class="lock">🔒</span>
+        <span>When you type your password, <b>nothing appears</b> — no dots, no asterisks (<b>*</b>), no characters at all. The terminal is <b>not frozen</b>. <span class="muted">Just type your password and press Enter.</span></span>
+        <button type="button" class="term-hint-close" id="term-hint-close" title="Dismiss" aria-label="Dismiss">&times;</button>
+      </div>
       <iframe src="/terminal/proxy/" class="term-iframe" id="term-iframe" scrolling="yes" allowfullscreen></iframe>
       <!-- <iframe src="/terminal3/proxy/" class="term-iframe" id="term-iframe" scrolling="yes" allowfullscreen></iframe> -->
     </div>
@@ -839,6 +873,20 @@ function popoutTerminal() {
   // window.open('/terminal3/proxy/', 'webminal_terminal', 'width=800,height=500');
 }
 
+// Dismissible password hint (remembered via localStorage)
+(function() {
+  var hint = document.getElementById('term-hint');
+  var close = document.getElementById('term-hint-close');
+  if (!hint || !close) return;
+  var KEY = 'wm_hide_pw_hint';
+  try {
+    if (localStorage.getItem(KEY) === '1') hint.classList.add('hidden');
+  } catch (e) {}
+  close.addEventListener('click', function() {
+    hint.classList.add('hidden');
+    try { localStorage.setItem(KEY, '1'); } catch (e) {}
+  });
+})();
 // ── Resizable panel ──
 (function() {
   var handle = document.getElementById('resize-handle');
