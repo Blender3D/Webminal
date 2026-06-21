@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal — Courses</title>
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff; --bg2: #f9f9f8; --bg3: #f3f3f1;
+    --text: #111111; --muted: #6b7280; --border: rgba(0,0,0,0.1);
+    --green-bg: #eaf3de; --green-txt: #3b6d11; --green-dot: #00cc6a;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px; --radius-lg: 12px;
+  }
+
+  html, body { height: 100%; font-family: var(--font-sans); background: var(--bg2); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+  .flash-bar { padding: 10px 24px; font-size: 13px; text-align: center; }
+  .flash-bar.flash-warning { background: #fff3cd; color: #856404; }
+  .flash-bar.flash-error   { background: #f8d7da; color: #721c24; }
+  .flash-bar.flash-info, .flash-bar.flash-message { background: var(--green-bg); color: var(--green-txt); }
+
+  /*  NAV (shared with about.html)  */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; border-bottom: 0.5px solid var(--border);
+    background: var(--bg); position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: var(--radius-md); transition: background 0.15s, color 0.15s; }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links a.active { background: var(--green-bg); color: var(--green-txt); }
+  .nav-links .nav-user { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--green-txt); font-weight: 500; padding: 5px 10px; border-radius: var(--radius-md); background: var(--green-bg); }
+  .nav-user-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-dot); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /*  DASHBOARD LAYOUT (3 columns)  */
+  .dash {
+    max-width: 1180px; margin: 0 auto; padding: 24px;
+    display: grid; grid-template-columns: 200px 1fr 300px; gap: 24px; align-items: start;
+  }
+
+  /* OptionMenu (left) */
+  .sidebar { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 2px; }
+  .side-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-md); font-size: 13.5px; color: var(--muted); text-decoration: none; transition: background 0.15s, color 0.15s; }
+  .side-link:hover { background: var(--bg3); color: var(--text); }
+  .side-link.active { background: var(--green-bg); color: var(--green-txt); font-weight: 600; }
+  .side-link .ico { width: 16px; text-align: center; font-size: 14px; }
+  .side-sep { height: 1px; background: var(--border); margin: 8px 4px; }
+
+  /* CoursesList (center) */
+  .main { min-width: 0; }
+  .main-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+  .page-title { font-family: var(--font-mono); font-size: 22px; font-weight: 700; }
+  .filters { display: flex; gap: 6px; }
+  .filter { font-family: var(--font-mono); font-size: 11.5px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .filter:hover { border-color: var(--green-dot); color: var(--green-txt); }
+  .filter.active { background: var(--green-bg); border-color: var(--green-bg); color: var(--green-txt); font-weight: 600; }
+
+  .course-card {
+    display: flex; gap: 14px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 12px;
+    text-decoration: none; color: inherit; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  }
+  .course-card:hover { border-color: var(--green-dot); box-shadow: 0 2px 12px rgba(0,0,0,0.05); transform: translateY(-1px); }
+  .course-ico { flex-shrink: 0; width: 46px; height: 46px; border-radius: var(--radius-md); background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .course-body { flex: 1; min-width: 0; }
+  .course-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .course-title { font-size: 15px; font-weight: 600; }
+  .course-count { font-family: var(--font-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .course-desc { font-size: 13px; color: var(--muted); margin: 3px 0 10px; line-height: 1.5; }
+
+  /* progress bar */
+  .pbar { height: 7px; background: var(--bg3); border-radius: 999px; overflow: hidden; }
+  .pfill { height: 100%; background: var(--green-dot); border-radius: 999px; transition: width 0.4s ease; }
+  .pmeta { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .badge { font-family: var(--font-mono); font-size: 10.5px; padding: 2px 8px; border-radius: 999px; }
+  .badge.done    { background: var(--green-bg); color: var(--green-txt); }
+  .badge.prog    { background: #fff3cd; color: #856404; }
+  .badge.none    { background: var(--bg3); color: var(--muted); }
+
+  /* CourseInfo (right rail) */
+  .rail { position: sticky; top: 80px; }
+  .rail-title { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 14px; }
+  .rail-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; }
+  .rail-card .rc-title { font-size: 13.5px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .rail-empty { font-size: 13px; color: var(--muted); line-height: 1.6; background: var(--bg); border: 1px dashed var(--border); border-radius: var(--radius-lg); padding: 18px; text-align: center; }
+
+  @media (max-width: 980px) {
+    .dash { grid-template-columns: 1fr; }
+    .sidebar { position: static; flex-direction: row; flex-wrap: wrap; top: auto; }
+    .rail { position: static; }
+    .nav-hide { display: none; }
+  }
+  @media (max-width: 640px) {
+    nav { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+    .nav-links { gap: 2px; flex-wrap: wrap; }
+    .nav-links a { font-size: 12px; padding: 4px 8px; }
+    .dash { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+{% for category, message in get_flashed_messages(with_categories=true) %}
+  <div class="flash-bar flash-{{ category }}">{{ message }}</div>
+{% endfor %}
+
+<nav>
+  <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+  <div class="nav-links">
+    <a href="{{ url_for('terminal') }}">Terminal</a>
+    <a href="{{ url_for('courses') }}" class="active">Courses</a>
+    <a href="/golf/">Golf</a>
+    <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer" class="nav-hide">Forum</a>
+    <a href="{{ url_for('faq') }}" class="nav-hide">FAQ</a>
+    <a href="{{ url_for('about') }}" class="nav-hide">About</a>
+    <a href="{{ url_for('settings') }}">Profile</a>
+    <a href="{{ url_for('logout') }}">Log out</a>
+    <div class="nav-user"><div class="nav-user-dot"></div>{{ uname }}</div>
+  </div>
+</nav>
+
+<div class="dash">
+
+  <!-- LEFT: OptionMenu -->
+  <aside class="sidebar">
+    <a href="{{ url_for('index') }}" class="side-link"><span class="ico">&#9632;</span> Home</a>
+    <a href="{{ url_for('courses') }}" class="side-link active"><span class="ico">&#9636;</span> Courses</a>
+    <a href="{{ url_for('terminal') }}" class="side-link"><span class="ico">&gt;_</span> Terminal</a>
+    <a href="/golf/" class="side-link"><span class="ico">&#9971;</span> Golf</a>
+    <a href="{{ url_for('settings') }}" class="side-link"><span class="ico">&#9673;</span> Profile</a>
+    <div class="side-sep"></div>
+    <a href="{{ url_for('logout') }}" class="side-link"><span class="ico">&#10162;</span> Log out</a>
+  </aside>
+
+  <!-- CENTER: CoursesList -->
+  <main class="main">
+    <div class="main-head">
+      <div class="page-title">All Courses</div>
+      <div class="filters">
+        <button class="filter active" data-filter="all">All</button>
+        <button class="filter" data-filter="prog">In Progress</button>
+        <button class="filter" data-filter="done">Completed</button>
+      </div>
+    </div>
+
+    {% for c in courses %}
+    <a class="course-card" href="{{ url_for('terminal', course=c.slug) }}" data-status="{{ c.status }}">
+      <div class="course-ico">{{ c.icon }}</div>
+      <div class="course-body">
+        <div class="course-row">
+          <div class="course-title">{{ c.title }}</div>
+          <div class="course-count">{{ c.total }} lesson{{ '' if c.total == 1 else 's' }}</div>
+        </div>
+        <div class="course-desc">{{ c.desc }}</div>
+        <div class="pbar"><div class="pfill" style="width: {{ c.pct }}%"></div></div>
+        <div class="pmeta">
+          <span>{{ c.completed }} / {{ c.total }} done</span>
+          {% if c.status == 'Completed' %}
+            <span class="badge done">&#10003; Completed</span>
+          {% elif c.status == 'In Progress' %}
+            <span class="badge prog">{{ c.pct }}% &middot; In Progress</span>
+          {% else %}
+            <span class="badge none">Not started</span>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+    {% else %}
+    <div class="rail-empty">No courses available yet. The catalog is being populated.</div>
+    {% endfor %}
+  </main>
+
+  <!-- RIGHT: CourseInfo -->
+  <aside class="rail">
+    <div class="rail-title">Your Progress &#128218;</div>
+    {% if active %}
+      {% for c in active %}
+      <div class="rail-card">
+        <div class="rc-title">{{ c.icon }} {{ c.title }}</div>
+        <div class="pbar"><div class="pfill" style="width: {{ c.pct }}%"></div></div>
+        <div class="pmeta">
+          <span>{{ c.pct }}%</span>
+          {% if c.status == 'Completed' %}<span class="badge done">&#10003; Done</span>{% else %}<span>{{ c.completed }}/{{ c.total }}</span>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="rail-empty">You haven't started a course yet.<br>Pick one to begin &#8594;</div>
+    {% endif %}
+  </aside>
+
+</div>
+
+<script>
+  // Client-side filter pills (All / In Progress / Completed)
+  (function() {
+    var pills = document.querySelectorAll('.filter');
+    var cards = document.querySelectorAll('.course-card');
+    function apply(f) {
+      cards.forEach(function(card) {
+        var s = card.getAttribute('data-status');
+        var show = (f === 'all') ||
+                   (f === 'prog' && s === 'In Progress') ||
+                   (f === 'done' && s === 'Completed');
+        card.style.display = show ? '' : 'none';
+      });
+    }
+    pills.forEach(function(p) {
+      p.addEventListener('click', function() {
+        pills.forEach(function(x){ x.classList.remove('active'); });
+        p.classList.add('active');
+        apply(p.getAttribute('data-filter'));
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>
