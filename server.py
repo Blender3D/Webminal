@@ -449,7 +449,7 @@ def contact():
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
   if 'user' in session:
-    return redirect(url_for('index'))
+    return redirect(url_for('courses'))
   form = LoginForm(request.form)
   if request.method == 'POST' and not ratelimit_ok("login:" + str(request.remote_addr), 10, 300):
     flash('Too many attempts. Please wait a few minutes and try again.', category='warning')
@@ -509,8 +509,8 @@ def login():
 	session['wmmail']=userprofile.wmmail
 	session['wmreserved']=userprofile.wmreserved
 
-        return redirect(url_for('index'))
-    
+        return redirect(url_for('courses'))
+
     flash('Invalid username or password', category='error')
   
   return render_template('login.html', form=form)
