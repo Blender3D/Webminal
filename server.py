@@ -327,6 +327,26 @@ class UserCourse(db.Model):
         return '<UserCourse %r>' % (self.uid)
 
 
+# Web-course progress: lean per-lesson completion, one row per (user, topic).
+# Decoupled from the timed Root-Lab UserCourse/SupportedConfig flow.
+class LessonProgress(db.Model):
+    __tablename__ = 'LessonProgress'
+    lpid = db.Column(db.Integer, primary_key=True)
+    uid = db.Column(db.Integer, index=True)
+    tid = db.Column(db.Integer, index=True)
+    status = db.Column(db.String(16))          # 'in-progress' | 'completed'
+    last_accessed = db.Column(db.DateTime)
+
+    def __init__(self, uid, tid, status, last_accessed=None):
+        self.uid = uid
+        self.tid = tid
+        self.status = status
+        self.last_accessed = last_accessed
+
+    def __repr__(self):
+        return '<LessonProgress uid=%r tid=%r %r>' % (self.uid, self.tid, self.status)
+
+
 def rot47(s):
     x = []
     for i in xrange(len(s)):
@@ -351,6 +371,67 @@ def page_not_found(error):
 @app.route('/about/')
 def about():
   return render_template('about.html')
+
+
+# category slug -> course presentation. A 'course' is a topic.catagory group.
+COURSE_META = [
+  ('basics',      {'title': 'Linux Basics',          'icon': u'\U0001F427', 'desc': 'Core commands: ls, cd, cat, grep, find and friends.'}),
+  ('scripting',   {'title': 'Shell Scripting',        'icon': u'\U0001F4DC', 'desc': 'Variables, inputs, loops and the find command.'}),
+  ('programming', {'title': 'Programming',            'icon': u'\U0001F40D', 'desc': 'Write and run Python in a real Linux environment.'}),
+  ('storage',     {'title': 'Storage & Filesystems',  'icon': u'\U0001F5C4', 'desc': 'fdisk, LVM, RAID, XFS, ext4, fsck and mount.'}),
+  ('security',    {'title': 'Security & Permissions', 'icon': u'\U0001F510', 'desc': 'ACL, sudo access and user / group management.'}),
+  ('tools',       {'title': 'Developer Tools',        'icon': u'\U0001F9F0', 'desc': 'strace, monitoring, git and svn.'}),
+  ('database',    {'title': 'Databases',              'icon': u'\U0001F5C3', 'desc': 'MySQL, PostgreSQL and MongoDB practice.'}),
+  ('services',    {'title': 'Services',               'icon': u'\U0001F310', 'desc': 'NFS and other network services.'}),
+]
+COURSE_ORDER = dict((slug, i) for i, (slug, _) in enumerate(COURSE_META))
+COURSE_LOOKUP = dict(COURSE_META)
+
+
+def compute_course_list(uid):
+  """Group topics into courses by category and overlay this user's progress."""
+  groups = {}
+  for t in topic.query.all():
+    groups.setdefault(t.catagory or 'other', []).append(t)
+
+  done = set()
+  seen = set()
+  for lp in LessonProgress.query.filter_by(uid=uid).all():
+    seen.add(lp.tid)
+    if lp.status == 'completed':
+      done.add(lp.tid)
+
+  course_list = []
+  for cat, lessons in groups.items():
+    meta = COURSE_LOOKUP.get(cat, {'title': cat.title(), 'icon': u'\U0001F4D8', 'desc': ''})
+    total = len(lessons)
+    completed = sum(1 for l in lessons if l.tid in done)
+    touched = any(l.tid in seen for l in lessons)
+    pct = int(round(completed * 100.0 / total)) if total else 0
+    if total and completed >= total:
+      status = 'Completed'
+    elif touched or completed:
+      status = 'In Progress'
+    else:
+      status = 'Not started'
+    course_list.append({
+      'slug': cat, 'title': meta['title'], 'icon': meta['icon'], 'desc': meta['desc'],
+      'total': total, 'completed': completed, 'pct': pct, 'status': status,
+    })
+
+  course_list.sort(key=lambda c: COURSE_ORDER.get(c['slug'], 99))
+  return course_list
+
+
+@app.route('/courses/')
+def courses():
+  if 'user' not in session:
+    flash('You must be logged in to view courses', category='warning')
+    return redirect(url_for('login'))
+  course_list = compute_course_list(session.get('uid'))
+  active = [c for c in course_list if c['status'] != 'Not started']
+  return render_template('courses.html', courses=course_list, active=active,
+                         uname=session.get('username'))
 
 @app.route('/sponsors/')
 def sponsors():
