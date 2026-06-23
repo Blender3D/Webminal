@@ -6,7 +6,7 @@ import threading
 import subprocess
 
 from flask import Flask, url_for, render_template, render_template_string, \
-    safe_join, request, flash, redirect, session, abort, Response
+    safe_join, request, flash, redirect, session, abort, Response, jsonify
 
 from flask_wtf.csrf import CSRFProtect
 
@@ -432,6 +432,58 @@ def courses():
   active = [c for c in course_list if c['status'] != 'Not started']
   return render_template('courses.html', courses=course_list, active=active,
                          uname=session.get('username'))
+
+
+def build_course_ctx(slug, uid):
+  """Course context for the in-terminal Learn view. None when no course is given."""
+  if not slug:
+    return None
+  lessons = topic.query.filter_by(catagory=slug).order_by(topic.tid).all()
+  if not lessons:
+    return None
+  done = set(lp.tid for lp in
+             LessonProgress.query.filter_by(uid=uid, status='completed').all())
+  meta = COURSE_LOOKUP.get(slug, {'title': slug.title(), 'icon': u'\U0001F4D8'})
+  ll = [{'tid': t.tid, 'name': t.topicname, 'done': t.tid in done} for t in lessons]
+  total = len(ll)
+  completed = sum(1 for l in ll if l['done'])
+  return {
+    'slug': slug, 'title': meta['title'], 'icon': meta['icon'], 'lessons': ll,
+    'total': total, 'completed': completed,
+    'pct': int(round(completed * 100.0 / total)) if total else 0,
+  }
+
+
+@app.route('/api/lesson/complete', methods=['POST'])
+def api_lesson_complete():
+  """Mark a lesson complete for the logged-in user; returns updated course progress."""
+  if 'user' not in session:
+    return jsonify(ok=False, error='auth'), 403
+  uid = session.get('uid')
+  raw = request.form.get('tid') or (request.get_json(silent=True) or {}).get('tid')
+  try:
+    tid = int(raw)
+  except (TypeError, ValueError):
+    return jsonify(ok=False, error='bad tid'), 400
+  t = topic.query.filter_by(tid=tid).first()
+  if not t:
+    return jsonify(ok=False, error='no such lesson'), 404
+  now = datetime.datetime.now()
+  lp = LessonProgress.query.filter_by(uid=uid, tid=tid).first()
+  if lp:
+    lp.status = 'completed'
+    lp.last_accessed = now
+  else:
+    db.session.add(LessonProgress(uid, tid, 'completed', now))
+  db.session.commit()
+  # recompute this course's (= category's) progress
+  cat_lessons = topic.query.filter_by(catagory=t.catagory).all()
+  done = set(x.tid for x in
+             LessonProgress.query.filter_by(uid=uid, status='completed').all())
+  total = len(cat_lessons)
+  completed = sum(1 for x in cat_lessons if x.tid in done)
+  pct = int(round(completed * 100.0 / total)) if total else 0
+  return jsonify(ok=True, tid=tid, completed=completed, total=total, pct=pct)
 
 @app.route('/sponsors/')
 def sponsors():
@@ -936,7 +988,8 @@ def terminal():
 
     form = TermForm(request.form)
     username=session.get('username')
-    return render_template('terminal.html',form=form,uname=username)
+    course_ctx = build_course_ctx(request.args.get('course'), session.get('uid'))
+    return render_template('terminal.html',form=form,uname=username,course_ctx=course_ctx)
   
   flash('You must have an account to use the online terminal', category='warning')
   return redirect(url_for('register'))
