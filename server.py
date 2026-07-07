@@ -114,6 +114,10 @@ class LoginForm(Form):
 
   # Disable after https://www.taringa.net/posts/ebooks-tutoriales/20143212/Aprende-todo-sobre-la-terminal-de-Linux-de-forma-interactiva.html
   # July-2 Fix remove recaptcha from login
+class DeleteAccountForm(Form):
+  confirm_password = PasswordField('Password', [validators.Required()])
+  confirm_text = TextField('Confirm', [validators.Required()])
+
 
 class PricingForm(Form):
   email = TextField('Email Address', [validators.Email(message='Invalid email address.')])
@@ -342,6 +346,21 @@ class LessonProgress(db.Model):
         self.tid = tid
         self.status = status
         self.last_accessed = last_accessed
+
+class DeletionRequest(db.Model):
+    __tablename__ = 'DeletionRequest'
+    id = db.Column(db.Integer, primary_key=True)
+    uid = db.Column(db.Integer, unique=True, index=True)
+    nickname = db.Column(db.String(80))
+    requested_at = db.Column(db.DateTime)
+
+    def __init__(self, uid, nickname):
+        self.uid = uid
+        self.nickname = nickname
+        self.requested_at = datetime.datetime.now()
+
+    def __repr__(self):
+        return '<DeletionRequest %r>' % (self.nickname)
 
     def __repr__(self):
         return '<LessonProgress uid=%r tid=%r %r>' % (self.uid, self.tid, self.status)
@@ -581,6 +600,44 @@ def logout():
   return redirect(url_for('index'))
 
 
+DELETE_GRACE_DAYS = 14
+
+@app.route('/settings/delete-account', methods=['POST'])
+def delete_account():
+  if 'user' not in session:
+    return redirect(url_for('login'))
+  username = session.get('username')
+  if username in (None, '', 'root'):
+    flash('This account cannot be deleted here.', category='warning')
+    return redirect(url_for('settings'))
+  form = DeleteAccountForm(request.form)   # Flask-WTF validates the CSRF token here.
+  if not form.validate():
+    flash('Could not process that request. Please try again.', category='warning')
+    return redirect(url_for('settings'))
+  user = User.query.filter_by(nickname=username).first()
+  if not user:
+    return redirect(url_for('login'))
+  # Re-authenticate before doing anything destructive.
+  if not user.verify_password(form.confirm_password.data):
+    flash('Incorrect password. Your account was NOT deleted.', category='warning')
+    return redirect(url_for('settings'))
+  if form.confirm_text.data.strip() != username:
+    flash('Confirmation did not match your username. Your account was NOT deleted.', category='warning')
+    return redirect(url_for('settings'))
+  # Soft delete: record the request in the side table (idempotent) and disable
+  # the account. 
+  if not DeletionRequest.query.filter_by(uid=user.uid).first():
+    db.session.add(DeletionRequest(user.uid, user.nickname))
+  user.active = False
+  db.session.commit()
+  # Terminate any live shell sessions
+  if username != "root" and username != "":
+    os.system("pkill -KILL -u" + username)
+  session.clear()
+  purge_on = (datetime.datetime.now() + datetime.timedelta(days=DELETE_GRACE_DAYS)).strftime('%d %b %Y')
+  flash('Your account has been disabled and scheduled for permanent deletion on %s. '
+        'To cancel, email efgadmin@webminal.org before then.' % purge_on)
+  return redirect(url_for('index'))
 @app.route('/settings/save',methods=['GET','POST'])
 def settings_save():
   if 'user' in session:
