@@ -1,15 +1,161 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webminal Sponsors</title>
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block title %}Webminal{% endblock title %}
+  :root {
+    --bg: #ffffff; --bg2: #f9f9f8; --bg3: #f3f3f1;
+    --text: #111111; --muted: #6b7280; --border: rgba(0,0,0,0.1);
+    --green-bg: #eaf3de; --green-txt: #3b6d11;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --radius-md: 8px; --radius-lg: 12px;
+  }
 
-{% block body %}
-<h2>Sponsors</h2>
-<pre>
-   - Starting this new year 2022, I'm happy to annouce that<a href="https://www.linode.com/"> Linode </a>generously sponsored the webminal.org website 
-     and forum cloud hosting and Linux servers. Since 2014, I'm using them. During this period, 
-     I also roamed around different vendors like DigitalOcean, AWS, GCP, IBM Cloud and OVH but 
-     honestly nothing beats Linode support team and provides different Linux distros with nice features. 
-     Thank you Linode for your support!
-   
-</pre>
-{% endblock body %}
+  html, body { height: 100%; font-family: var(--font-sans); background: var(--bg2); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+  .flash-bar { padding: 10px 24px; font-size: 13px; text-align: center; }
+  .flash-bar.flash-warning { background: #fff3cd; color: #856404; }
+  .flash-bar.flash-error   { background: #f8d7da; color: #721c24; }
+  .flash-bar.flash-info, .flash-bar.flash-message { background: var(--green-bg); color: var(--green-txt); }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; border-bottom: 0.5px solid var(--border);
+    background: var(--bg); position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: var(--radius-md); transition: background 0.15s, color 0.15s; }
+  .nav-links a:hover { background: var(--bg3); color: var(--text); }
+  .nav-links a.active { background: var(--green-bg); color: var(--green-txt); }
+  .nav-links .nav-user { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--green-txt); font-weight: 500; padding: 5px 10px; border-radius: var(--radius-md); background: var(--green-bg); }
+  .nav-user-dot { width: 6px; height: 6px; border-radius: 50%; background: #00cc6a; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .page { max-width: 700px; margin: 0 auto; padding: 32px 24px 64px; }
+  .page-title { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .page-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+  .section-title {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+    margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 10px;
+    font-size: 14px; line-height: 1.7;
+  }
+  .card a { color: var(--green-txt); text-decoration: underline; }
+  .card h3 { font-size: 15px; margin-bottom: 6px; }
+  .sponsor-logo { width: 110px; height: auto; display: block; margin-bottom: 12px; }
+
+  ul.help { list-style: none; padding: 0; margin: 0; }
+  ul.help li { padding: 4px 0; font-size: 14px; line-height: 1.6; }
+
+  @media (max-width: 640px) {
+    nav { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+    .nav-links { gap: 2px; flex-wrap: wrap; }
+    .nav-links a { font-size: 12px; padding: 4px 8px; }
+    .nav-hide { display: none; }
+    .page { padding: 24px 16px 48px; }
+    .page-title { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+{% for category, message in get_flashed_messages(with_categories=true) %}
+  <div class="flash-bar flash-{{ category }}">{{ message }}</div>
+{% endfor %}
+
+<nav>
+  <a href="{{ url_for('index') }}" class="logo">[webminal]</a>
+  <div class="nav-links">
+    {% if 'user' in session %}
+      <a href="{{ url_for('terminal') }}">Terminal</a>
+      <a href="/golf/">Golf</a>
+    {% endif %}
+    <a href="https://community.webminal.org" target="_blank" rel="noopener noreferrer">Forum</a>
+    <a href="{{ url_for('faq') }}">FAQ</a>
+    <a href="{{ url_for('about') }}" class="nav-hide">About</a>
+    <a href="{{ url_for('sponsors') }}" class="active">&#9829; Sponsor</a>
+    {% if 'user' not in session %}
+      <a href="{{ url_for('register') }}">Register</a>
+      <a href="{{ url_for('login') }}">Log in</a>
+    {% else %}
+      <a href="{{ url_for('settings') }}">Profile</a>
+      <a href="{{ url_for('logout') }}">Log out</a>
+      <div class="nav-user"><div class="nav-user-dot"></div>{{ session['username'] }}</div>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- LIVE TICKER -->
+<section style="border-bottom: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; height: 32px; background: #0d0f14; display: flex; align-items: center; padding: 0;">
+  <a href="/live/" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #00cc6a; padding: 0 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; text-decoration: none; border-right: 1px solid rgba(255,255,255,0.06); height: 100%;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00cc6a;animation:pulse 2s infinite;"></span>live</a>
+  <div style="flex:1; overflow: hidden; position: relative; height: 100%;">
+    <div id="live-ticker" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b7280; white-space: nowrap; position: absolute; display: flex; gap: 32px; align-items: center; height: 100%; will-change: transform;"></div>
+  </div>
+</section>
+
+<div class="page">
+  <h1 class="page-title">Sponsors</h1>
+  <p class="page-subtitle">Webminal has been free for everyone since 2011, with thanks to those who've helped keep it running.</p>
+
+  <div class="section-title">Current sponsors</div>
+
+  <div class="card">
+    <a href="https://fossunited.org/" target="_blank" rel="noopener noreferrer"><img src="/static/FOSSUnited.png" alt="FOSS United" class="sponsor-logo"></a>
+    <h3><a href="https://fossunited.org/grants">FOSS United</a>: project grant (2026)</h3>
+    I'm really happy to announce that www.webminal.org has received a grant from FOSS United. It goes toward upgrading and running the servers, and toward ongoing maintenance, development (finally some room to try out new Webminal ideas :D), and support, keeping webminal.org a free resource for everyone. I truly appreciate their effort to support the FOSS ecosystem in India and across the world.
+  </div>
+
+  <div class="card">
+    <a href="https://www.anthropic.com/" target="_blank" rel="noopener noreferrer"><img src="/static/claude.png" alt="Claude for Open Source" class="sponsor-logo"></a>
+    <h3><a href="https://www.anthropic.com/">Anthropic</a>: Claude for Open Source (2026)</h3>
+    I'm really happy and excited to announce that Anthropic generously provided six months of free Claude Max access, giving me room to explore what's next for Webminal, from new environments to development labs. Thank you, Anthropic for supporting Open Source development!
+  </div>
+
+  <div class="section-title">Past sponsors</div>
+
+  <div class="card">
+    <a href="https://www.linode.com/" target="_blank" rel="noopener noreferrer"><img src="/static/Linode.png" alt="Linode" class="sponsor-logo"></a>
+    <h3><a href="https://www.linode.com/">Linode</a>: cloud hosting (2022-2023)</h3>
+    Linode sponsored webminal.org's hosting servers from 2022 to 2023. Linode's support team is one of the best, and it has a great range of Linux distros. Thank you, Linode!
+  </div>
+
+  <div class="section-title">Other ways to help</div>
+
+  <div class="card">
+    <ul class="help">
+      <li>&#9829; Sponsor the project on <a href="https://github.com/sponsors/Lakshmipathi" target="_blank" rel="noopener noreferrer">GitHub Sponsors</a></li>
+      <li>&#9733; Star or contribute on <a href="https://github.com/lakshmipathi/webminal">GitHub</a></li>
+      <li>&#128172; Help fellow learners on the <a href="https://community.webminal.org">Forum</a></li>
+      <li>&#128226; Spread the word: share Webminal with someone learning Linux</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var ticker = document.getElementById('live-ticker');
+  if (!ticker) return;
+  function buildTicker(cmds) { ticker.innerHTML = ''; var allCmds = cmds.concat(cmds); for (var i = 0; i < allCmds.length; i++) { var span = document.createElement('span'); span.textContent = allCmds[i]; span.style.color = '#c8d3f5'; ticker.appendChild(span); var dot = document.createElement('span'); dot.textContent = '·'; dot.style.color = '#6b7280'; dot.style.margin = '0 8px'; ticker.appendChild(dot); } }
+  function startScroll() { var pos = 0, halfWidth = ticker.scrollWidth / 2; if (halfWidth === 0) return; function step() { pos -= 0.5; if (Math.abs(pos) >= halfWidth) pos = 0; ticker.style.transform = 'translateX(' + pos + 'px)'; requestAnimationFrame(step); } step(); }
+  function fetchAndScroll() { var xhr = new XMLHttpRequest(); xhr.open('GET', '/api/live/?t=' + Date.now()); xhr.onload = function() { if (xhr.status === 200 && xhr.responseText.trim()) { var cmds = xhr.responseText.trim().split('\n'); if (cmds.length > 0) { buildTicker(cmds); startScroll(); } } }; xhr.send(); }
+  fetchAndScroll(); setInterval(fetchAndScroll, 15000);
+})();
+</script>
+
+</body>
+</html>
