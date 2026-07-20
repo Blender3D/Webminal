@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Webminal — Terminal</title>
 <link rel="stylesheet" href="/static/fonts/fonts.css">
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
@@ -564,6 +565,54 @@
     white-space: nowrap;
   }
 
+  /* ── COURSE MODE ── */
+  .course-banner {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--border);
+    flex-shrink: 0;
+  }
+  .course-crumb { font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-decoration: none; }
+  .course-crumb:hover { color: var(--green-txt); }
+  .course-banner-title { font-size: 15px; font-weight: 600; margin: 4px 0 10px; }
+  .course-banner .progress-bar { margin-bottom: 5px; }
+  .course-banner .progress-text { display: block; }
+
+  .course-lessons {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 32%;
+    overflow-y: auto;
+    border-bottom: 0.5px solid var(--border);
+    flex-shrink: 0;
+  }
+  .clesson {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 16px;
+    font-size: 12.5px;
+    color: var(--text);
+    cursor: pointer;
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.15s;
+  }
+  .clesson:last-child { border-bottom: none; }
+  .clesson:hover { background: var(--bg3); }
+  .clesson.active { background: var(--green-bg); }
+  .clesson.active .clesson-name { color: var(--green-txt); font-weight: 600; }
+  .clesson-check {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    width: 14px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .clesson.done .clesson-check { color: var(--green-txt); }
+  .clesson-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .footer-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
   /* Play tab content */
   .play-list {
     list-style: none;
@@ -713,6 +762,41 @@
 
       <!-- LESSONS TAB -->
       <div class="tab-content active" id="tab-lessons">
+
+        {% if course_ctx %}
+        <!-- COURSE MODE: scoped to one course, tracked progress -->
+        <div class="course-banner">
+          <a href="{{ url_for('courses') }}" class="course-crumb">&#8592; Courses</a>
+          <div class="course-banner-title">{{ course_ctx.icon }} {{ course_ctx.title }}</div>
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width: {{ course_ctx.pct }}%"></div></div>
+          <div class="progress-text" id="progress-text">{{ course_ctx.completed }} / {{ course_ctx.total }} completed</div>
+        </div>
+
+        <ul class="course-lessons" id="course-lessons">
+          {% for l in course_ctx.lessons %}
+          <li class="clesson{% if l.done %} done{% endif %}" data-tid="{{ l.tid }}" data-name="{{ l.name }}">
+            <span class="clesson-check">{% if l.done %}&#10003;{% else %}&#9675;{% endif %}</span>
+            <span class="clesson-name">{{ l.name }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <div class="panel-content" id="side-content">
+          <div class="lesson-placeholder">
+            <div class="lesson-placeholder-icon">&#9654;</div>
+            Pick a lesson from the list to begin.<br>
+            Complete the task in the terminal, then mark it done.
+          </div>
+        </div>
+
+        <div class="panel-footer">
+          <button class="footer-btn secondary" onclick="prevLesson()">prev</button>
+          <button class="footer-btn primary" id="verify-btn" onclick="markComplete()" disabled>&#10003; Mark Complete</button>
+          <button class="footer-btn secondary" onclick="nextLesson()">next</button>
+        </div>
+
+        {% else %}
+        <!-- FREE MODE: generic lesson dropdown -->
         <div class="panel-selector">
           <div class="selector-label">// SELECT LESSON</div>
           {{ form.side_course(class="selector-select", id="side_course") }}
@@ -735,6 +819,7 @@
           <button class="footer-btn secondary" onclick="prevLesson()">prev</button>
           <button class="footer-btn primary" onclick="nextLesson()">next</button>
         </div>
+        {% endif %}
       </div>
 
       <!-- PLAY TAB -->
@@ -792,15 +877,16 @@
 // ── Lesson loading via AJAX (existing mechanism) ──
 function getTotal() {
   var sel = document.getElementById('side_course');
-  return sel.options.length - 1; // minus "Select"
+  return sel ? sel.options.length - 1 : 0; // minus "Select"
 }
 
 function getPosition() {
   var sel = document.getElementById('side_course');
-  return sel.selectedIndex; // 0 = "Select", 1 = first lesson
+  return sel ? sel.selectedIndex : 0; // 0 = "Select", 1 = first lesson
 }
 
 function updateProgress() {
+  if (window.Course) return;   // course mode owns its own progress UI
   var total = getTotal();
   var pos = getPosition();
   var pct = (total > 0 && pos > 0) ? Math.round((pos / total) * 100) : 0;
@@ -831,16 +917,18 @@ $('#side_course').change(function() {
 
 // ── Prev / Next ──
 function nextLesson() {
+  if (window.Course) { window.Course.step(1); return; }   // course mode
   var sel = document.getElementById('side_course');
-  if (sel.selectedIndex < sel.options.length - 1) {
+  if (sel && sel.selectedIndex < sel.options.length - 1) {
     sel.selectedIndex++;
     $(sel).trigger('change');
   }
 }
 
 function prevLesson() {
+  if (window.Course) { window.Course.step(-1); return; }   // course mode
   var sel = document.getElementById('side_course');
-  if (sel.selectedIndex > 1) { // skip "Select" at index 0
+  if (sel && sel.selectedIndex > 1) { // skip "Select" at index 0
     sel.selectedIndex--;
     $(sel).trigger('change');
   }
@@ -990,6 +1078,71 @@ document.querySelectorAll('.cast-item').forEach(function(item) {
 
 // ── Init progress on load ──
 updateProgress();
+
+// ── COURSE MODE: course-scoped lessons + Mark Complete ──
+(function() {
+  var listEl = document.getElementById('course-lessons');
+  if (!listEl) return;   // not in course mode
+
+  var items = Array.prototype.slice.call(listEl.querySelectorAll('.clesson'));
+  var btn = document.getElementById('verify-btn');
+  var current = -1;
+  var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+
+  function load(idx) {
+    if (idx < 0 || idx >= items.length) return;
+    current = idx;
+    var li = items[idx];
+    items.forEach(function(x) { x.classList.remove('active'); });
+    li.classList.add('active');
+    btn.disabled = false;
+    btn.innerHTML = li.classList.contains('done') ? '&#10003; Completed' : '&#10003; Mark Complete';
+    var name = li.getAttribute('data-name');
+    $('#side-content').html('<div class="lesson-placeholder">Loading...</div>');
+    $.get('/help/' + name + '/plain/').done(function(data) {
+      $('#side-content').html(data);
+    }).fail(function() {
+      $('#side-content').html('<div class="lesson-placeholder">Could not load lesson content.</div>');
+    });
+  }
+
+  function refreshProgress(completed, total, pct) {
+    var fill = document.getElementById('progress-fill');
+    var txt = document.getElementById('progress-text');
+    if (fill) fill.style.width = pct + '%';
+    if (txt) txt.textContent = completed + ' / ' + total + ' completed';
+  }
+
+  window.markComplete = function() {
+    if (current < 0) return;
+    var li = items[current];
+    var tid = li.getAttribute('data-tid');
+    btn.disabled = true;
+    $.ajax({
+      url: '/api/lesson/complete', type: 'POST', data: { tid: tid }, dataType: 'json',
+      headers: { 'X-CSRFToken': csrf }
+    }).done(function(res) {
+      if (res && res.ok) {
+        li.classList.add('done');
+        li.querySelector('.clesson-check').innerHTML = '&#10003;';
+        btn.innerHTML = '&#10003; Completed';
+        refreshProgress(res.completed, res.total, res.pct);
+      }
+      btn.disabled = false;
+    }).fail(function() { btn.disabled = false; });
+  };
+
+  window.Course = {
+    step: function(dir) {
+      var i = current < 0 ? (dir > 0 ? 0 : items.length - 1) : current + dir;
+      if (i >= 0 && i < items.length) load(i);
+    }
+  };
+
+  items.forEach(function(li, i) {
+    li.addEventListener('click', function() { load(i); });
+  });
+})();
 </script>
 </body>
 </html>

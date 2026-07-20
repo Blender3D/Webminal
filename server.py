@@ -6,7 +6,7 @@ import threading
 import subprocess
 
 from flask import Flask, url_for, render_template, render_template_string, \
-    safe_join, request, flash, redirect, session, abort, Response
+    safe_join, request, flash, redirect, session, abort, Response, jsonify
 
 from flask_wtf.csrf import CSRFProtect
 
@@ -114,6 +114,10 @@ class LoginForm(Form):
 
   # Disable after https://www.taringa.net/posts/ebooks-tutoriales/20143212/Aprende-todo-sobre-la-terminal-de-Linux-de-forma-interactiva.html
   # July-2 Fix remove recaptcha from login
+class DeleteAccountForm(Form):
+  confirm_password = PasswordField('Password', [validators.Required()])
+  confirm_text = TextField('Confirm', [validators.Required()])
+
 
 class PricingForm(Form):
   email = TextField('Email Address', [validators.Email(message='Invalid email address.')])
@@ -327,6 +331,41 @@ class UserCourse(db.Model):
         return '<UserCourse %r>' % (self.uid)
 
 
+# Web-course progress: lean per-lesson completion, one row per (user, topic).
+# Decoupled from the timed Root-Lab UserCourse/SupportedConfig flow.
+class LessonProgress(db.Model):
+    __tablename__ = 'LessonProgress'
+    lpid = db.Column(db.Integer, primary_key=True)
+    uid = db.Column(db.Integer, index=True)
+    tid = db.Column(db.Integer, index=True)
+    status = db.Column(db.String(16))          # 'in-progress' | 'completed'
+    last_accessed = db.Column(db.DateTime)
+
+    def __init__(self, uid, tid, status, last_accessed=None):
+        self.uid = uid
+        self.tid = tid
+        self.status = status
+        self.last_accessed = last_accessed
+
+class DeletionRequest(db.Model):
+    __tablename__ = 'DeletionRequest'
+    id = db.Column(db.Integer, primary_key=True)
+    uid = db.Column(db.Integer, unique=True, index=True)
+    nickname = db.Column(db.String(80))
+    requested_at = db.Column(db.DateTime)
+
+    def __init__(self, uid, nickname):
+        self.uid = uid
+        self.nickname = nickname
+        self.requested_at = datetime.datetime.now()
+
+    def __repr__(self):
+        return '<DeletionRequest %r>' % (self.nickname)
+
+    def __repr__(self):
+        return '<LessonProgress uid=%r tid=%r %r>' % (self.uid, self.tid, self.status)
+
+
 def rot47(s):
     x = []
     for i in xrange(len(s)):
@@ -352,6 +391,119 @@ def page_not_found(error):
 def about():
   return render_template('about.html')
 
+
+# category slug -> course presentation. A 'course' is a topic.catagory group.
+COURSE_META = [
+  ('basics',      {'title': 'Linux Basics',          'icon': u'\U0001F427', 'desc': 'Core commands: ls, cd, cat, grep, find and friends.'}),
+  ('scripting',   {'title': 'Shell Scripting',        'icon': u'\U0001F4DC', 'desc': 'Variables, inputs, loops and the find command.'}),
+  ('programming', {'title': 'Programming',            'icon': u'\U0001F40D', 'desc': 'Write and run Python in a real Linux environment.'}),
+  ('storage',     {'title': 'Storage & Filesystems',  'icon': u'\U0001F5C4', 'desc': 'fdisk, LVM, RAID, XFS, ext4, fsck and mount.'}),
+  ('security',    {'title': 'Security & Permissions', 'icon': u'\U0001F510', 'desc': 'ACL, sudo access and user / group management.'}),
+  ('tools',       {'title': 'Developer Tools',        'icon': u'\U0001F9F0', 'desc': 'strace, monitoring, git and svn.'}),
+  ('database',    {'title': 'Databases',              'icon': u'\U0001F5C3', 'desc': 'MySQL, PostgreSQL and MongoDB practice.'}),
+  ('services',    {'title': 'Services',               'icon': u'\U0001F310', 'desc': 'NFS and other network services.'}),
+]
+COURSE_ORDER = dict((slug, i) for i, (slug, _) in enumerate(COURSE_META))
+COURSE_LOOKUP = dict(COURSE_META)
+
+
+def compute_course_list(uid):
+  """Group topics into courses by category and overlay this user's progress."""
+  groups = {}
+  for t in topic.query.all():
+    groups.setdefault(t.catagory or 'other', []).append(t)
+
+  done = set()
+  seen = set()
+  for lp in LessonProgress.query.filter_by(uid=uid).all():
+    seen.add(lp.tid)
+    if lp.status == 'completed':
+      done.add(lp.tid)
+
+  course_list = []
+  for cat, lessons in groups.items():
+    meta = COURSE_LOOKUP.get(cat, {'title': cat.title(), 'icon': u'\U0001F4D8', 'desc': ''})
+    total = len(lessons)
+    completed = sum(1 for l in lessons if l.tid in done)
+    touched = any(l.tid in seen for l in lessons)
+    pct = int(round(completed * 100.0 / total)) if total else 0
+    if total and completed >= total:
+      status = 'Completed'
+    elif touched or completed:
+      status = 'In Progress'
+    else:
+      status = 'Not started'
+    course_list.append({
+      'slug': cat, 'title': meta['title'], 'icon': meta['icon'], 'desc': meta['desc'],
+      'total': total, 'completed': completed, 'pct': pct, 'status': status,
+    })
+
+  course_list.sort(key=lambda c: COURSE_ORDER.get(c['slug'], 99))
+  return course_list
+
+
+@app.route('/courses/')
+def courses():
+  if 'user' not in session:
+    flash('You must be logged in to view courses', category='warning')
+    return redirect(url_for('login'))
+  course_list = compute_course_list(session.get('uid'))
+  active = [c for c in course_list if c['status'] != 'Not started']
+  return render_template('courses.html', courses=course_list, active=active,
+                         uname=session.get('username'))
+
+
+def build_course_ctx(slug, uid):
+  """Course context for the in-terminal Learn view. None when no course is given."""
+  if not slug:
+    return None
+  lessons = topic.query.filter_by(catagory=slug).order_by(topic.tid).all()
+  if not lessons:
+    return None
+  done = set(lp.tid for lp in
+             LessonProgress.query.filter_by(uid=uid, status='completed').all())
+  meta = COURSE_LOOKUP.get(slug, {'title': slug.title(), 'icon': u'\U0001F4D8'})
+  ll = [{'tid': t.tid, 'name': t.topicname, 'done': t.tid in done} for t in lessons]
+  total = len(ll)
+  completed = sum(1 for l in ll if l['done'])
+  return {
+    'slug': slug, 'title': meta['title'], 'icon': meta['icon'], 'lessons': ll,
+    'total': total, 'completed': completed,
+    'pct': int(round(completed * 100.0 / total)) if total else 0,
+  }
+
+
+@app.route('/api/lesson/complete', methods=['POST'])
+def api_lesson_complete():
+  """Mark a lesson complete for the logged-in user; returns updated course progress."""
+  if 'user' not in session:
+    return jsonify(ok=False, error='auth'), 403
+  uid = session.get('uid')
+  raw = request.form.get('tid') or (request.get_json(silent=True) or {}).get('tid')
+  try:
+    tid = int(raw)
+  except (TypeError, ValueError):
+    return jsonify(ok=False, error='bad tid'), 400
+  t = topic.query.filter_by(tid=tid).first()
+  if not t:
+    return jsonify(ok=False, error='no such lesson'), 404
+  now = datetime.datetime.now()
+  lp = LessonProgress.query.filter_by(uid=uid, tid=tid).first()
+  if lp:
+    lp.status = 'completed'
+    lp.last_accessed = now
+  else:
+    db.session.add(LessonProgress(uid, tid, 'completed', now))
+  db.session.commit()
+  # recompute this course's (= category's) progress
+  cat_lessons = topic.query.filter_by(catagory=t.catagory).all()
+  done = set(x.tid for x in
+             LessonProgress.query.filter_by(uid=uid, status='completed').all())
+  total = len(cat_lessons)
+  completed = sum(1 for x in cat_lessons if x.tid in done)
+  pct = int(round(completed * 100.0 / total)) if total else 0
+  return jsonify(ok=True, tid=tid, completed=completed, total=total, pct=pct)
+
 @app.route('/sponsors/')
 def sponsors():
   return render_template('sponsors.html')
@@ -368,7 +520,7 @@ def contact():
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
   if 'user' in session:
-    return redirect(url_for('index'))
+    return redirect(url_for('courses'))
   form = LoginForm(request.form)
   if request.method == 'POST' and not ratelimit_ok("login:" + str(request.remote_addr), 10, 300):
     flash('Too many attempts. Please wait a few minutes and try again.', category='warning')
@@ -428,8 +580,8 @@ def login():
 	session['wmmail']=userprofile.wmmail
 	session['wmreserved']=userprofile.wmreserved
 
-        return redirect(url_for('index'))
-    
+        return redirect(url_for('courses'))
+
     flash('Invalid username or password', category='error')
   
   return render_template('login.html', form=form)
@@ -448,6 +600,44 @@ def logout():
   return redirect(url_for('index'))
 
 
+DELETE_GRACE_DAYS = 14
+
+@app.route('/settings/delete-account', methods=['POST'])
+def delete_account():
+  if 'user' not in session:
+    return redirect(url_for('login'))
+  username = session.get('username')
+  if username in (None, '', 'root'):
+    flash('This account cannot be deleted here.', category='warning')
+    return redirect(url_for('settings'))
+  form = DeleteAccountForm(request.form)   # Flask-WTF validates the CSRF token here.
+  if not form.validate():
+    flash('Could not process that request. Please try again.', category='warning')
+    return redirect(url_for('settings'))
+  user = User.query.filter_by(nickname=username).first()
+  if not user:
+    return redirect(url_for('login'))
+  # Re-authenticate before doing anything destructive.
+  if not user.verify_password(form.confirm_password.data):
+    flash('Incorrect password. Your account was NOT deleted.', category='warning')
+    return redirect(url_for('settings'))
+  if form.confirm_text.data.strip() != username:
+    flash('Confirmation did not match your username. Your account was NOT deleted.', category='warning')
+    return redirect(url_for('settings'))
+  # Soft delete: record the request in the side table (idempotent) and disable
+  # the account. 
+  if not DeletionRequest.query.filter_by(uid=user.uid).first():
+    db.session.add(DeletionRequest(user.uid, user.nickname))
+  user.active = False
+  db.session.commit()
+  # Terminate any live shell sessions
+  if username != "root" and username != "":
+    os.system("pkill -KILL -u" + username)
+  session.clear()
+  purge_on = (datetime.datetime.now() + datetime.timedelta(days=DELETE_GRACE_DAYS)).strftime('%d %b %Y')
+  flash('Your account has been disabled and scheduled for permanent deletion on %s. '
+        'To cancel, email efgadmin@webminal.org before then.' % purge_on)
+  return redirect(url_for('index'))
 @app.route('/settings/save',methods=['GET','POST'])
 def settings_save():
   if 'user' in session:
@@ -855,7 +1045,8 @@ def terminal():
 
     form = TermForm(request.form)
     username=session.get('username')
-    return render_template('terminal.html',form=form,uname=username)
+    course_ctx = build_course_ctx(request.args.get('course'), session.get('uid'))
+    return render_template('terminal.html',form=form,uname=username,course_ctx=course_ctx)
   
   flash('You must have an account to use the online terminal', category='warning')
   return redirect(url_for('register'))
